@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stockify Pro Portfolio 💼</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .portfolio-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 12px;
+            border: 1px solid var(--accent-color);
+        }
+
+        .balance-lg {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--success-color);
+        }
+
+        .pos-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .pos-table th,
+        .pos-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .pos-table th {
+            color: var(--text-secondary);
+        }
+
+        .profit-pos {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+
+        .profit-neg {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Stockify Pro 💼</h1>
+            <div class="subtitle">Your Virtual Portfolio</div>
+        </header>
+
+        <div class="nav-bar" style="display:flex; justify-content:center; gap:1rem; margin-bottom:2rem;">
+            <a href="index.html" class="nav-link">📊 Analyzer</a>
+            <a href="screener.html" class="nav-link">🔍 Screener</a>
+            <a href="portfolio.html" class="nav-link active">💼 Portfolio</a>
+        </div>
+
+        <div class="card">
+            <div class="portfolio-header">
+                <div>
+                    <h3 style="margin:0; color:var(--text-secondary);">Total Balance (Cash + Equity)</h3>
+                    <div id="total-equity" class="balance-lg">Calculating...</div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="subtitle">Available Cash</div>
+                    <div id="cash-balance" style="font-size: 1.2rem; font-weight: bold;">0.00</div>
+                    <button onclick="resetPortfolio()"
+                        style="background:none; border:none; color:var(--danger-color); cursor:pointer; margin-top:0.5rem; text-decoration:underline;">Reset
+                        Portfolio ⚠️</button>
+                </div>
+            </div>
+
+            <h3>📊 Current Holdings</h3>
+            <div style="overflow-x: auto;">
+                <table class="pos-table">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Qty</th>
+                            <th>Avg Price</th>
+                            <th>Current Price</th>
+                            <th>Value</th>
+                            <th>P/L</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pos-body">
+                        <!-- Positions here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="margin-top: 2rem;">📜 Trade History</h3>
+            <div style="max-height: 200px; overflow-y: auto;">
+                <table class="pos-table" style="font-size: 0.9rem;">
+                    <tbody id="hist-body">
+                        <!-- History here -->
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="js/core/portfolio.js"></script>
+    <script>
+        const pm = new PortfolioManager();
+
+        async function loadPortfolio() {
+            const data = pm.getPortfolioSummary();
+            const posBody = document.getElementById('pos-body');
+            const histBody = document.getElementById('hist-body');
+
+            document.getElementById('cash-balance').textContent = data.balance.toLocaleString(undefined, { minimumFractionDigits: 2 });
+
+            // 1. Render History
+            histBody.innerHTML = '';
+            const history = pm.data.history || [];
+            if (history.length === 0) {
+                histBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No trade history</td></tr>';
+            } else {
+                history.slice(0, 10).forEach(h => {
+                    const plClass = h.profit >= 0 ? 'profit-pos' : 'profit-neg';
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${h.action} <strong>${h.symbol}</strong></td>
+                        <td>${h.qty} @ ${h.price.toFixed(2)}</td>
+                        <td class="${plClass}">${h.profit > 0 ? '+' : ''}${h.profit.toFixed(2)}</td>
+                        <td style="color:var(--text-secondary);">${new Date(h.date).toLocaleDateString()}</td>
+                     `;
+                    histBody.appendChild(row);
+                });
+            }
+
+            // 2. Render Positions with Real-time Prices
+            posBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Fetching Live Prices... ⏳</td></tr>';
+
+            if (data.positions.length === 0) {
+                posBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No open positions. Go to Analyzer to buy stocks! 🚀</td></tr>';
+                document.getElementById('total-equity').textContent = data.balance.toLocaleString(undefined, { minimumFractionDigits: 2 });
+                return;
+            }
+
+            let totalValue = 0;
+            let htmlChunks = [];
+
+            // Fetch prices for all positions
+            // Optimization: In a real app, use a bulk endpoint. Here we loop for simplicity but risk N+1
+            // We use the bulk /screen logic if we want, but let's just do individual for now as portfolio usually small.
+
+            for (const pos of data.positions) {
+                let currentPrice = pos.avgPrice; // Fallback
+                try {
+                    // Quick fetch just for price
+                    // Optimization: We could add a /price/<symbol> endpoint that is lighter
+                    const res = await fetch(`http://localhost:5000/analyze/${pos.symbol}`);
+                    const market = await res.json();
+                    if (!market.error) {
+                        currentPrice = market.price;
+                    }
+                } catch (e) {
+                    console.log("Price fetch err", e);
+                }
+
+                const marketValue = currentPrice * pos.qty;
+                const pl = marketValue - (pos.avgPrice * pos.qty);
+                const plPct = (pl / (pos.avgPrice * pos.qty)) * 100;
+                const plClass = pl >= 0 ? 'profit-pos' : 'profit-neg';
+
+                totalValue += marketValue;
+
+                htmlChunks.push(`
+                    <tr>
+                        <td><strong>${pos.symbol}</strong></td>
+                        <td>${pos.qty}</td>
+                        <td>${pos.avgPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                        <td>${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                        <td>${marketValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                        <td class="${plClass}">
+                            ${pl > 0 ? '+' : ''}${pl.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            <br><small>(${plPct.toFixed(2)}%)</small>
+                        </td>
+                        <td>
+                            <a href="index.html" onclick="localStorage.setItem('targetStock', '${pos.symbol}')" 
+                               class="btn-primary" style="padding:0.25rem 0.5rem; font-size:0.8rem; text-decoration:none;">Trade</a>
+                        </td>
+                    </tr>
+                `);
+            }
+
+            posBody.innerHTML = htmlChunks.join('');
+
+            const totalEquity = data.balance + totalValue;
+            document.getElementById('total-equity').textContent = totalEquity.toLocaleString(undefined, { minimumFractionDigits: 2 });
+        }
+
+        window.resetPortfolio = function () {
+            if (confirm("Are you sure you want to reset your portfolio and wipe all funds?")) {
+                pm.resetPortfolio();
+                loadPortfolio();
+            }
+        };
+
+        // Auto load
+        loadPortfolio();
+    </script>
+</body>
+
+</html>
