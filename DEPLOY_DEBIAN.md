@@ -72,10 +72,13 @@ WorkingDirectory=/var/www/stockify-pro
 Environment="PATH=/var/www/stockify-pro/venv/bin"
 ExecStart=/var/www/stockify-pro/venv/bin/gunicorn --workers 3 --bind unix:stockify.sock -m 007 server:app
 
+# Note: We use User=root here for simplicity. 
+# If you are logged in as 'ghostpetch', change the line above to: User=ghostpetch
+# And ensure you own the files: sudo chown -R ghostpetch:ghostpetch /var/www/stockify-pro
+
 [Install]
 WantedBy=multi-user.target
 ```
-*Note: We use `User=root` here for simplicity assuming you are logging in as root. If you have a specific user (e.g. `admin`), change `User=root` to `User=admin`.*
 
 3. Start and Enable the service:
 ```bash
