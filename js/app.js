@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultContainer = document.getElementById('result-container');
     const resultOutput = document.getElementById('result-output');
     const loadingSpinner = document.getElementById('loading-spinner');
+    let currentSymbol = null;
 
     // Market Info Elements
     const marketInfo = document.getElementById('market-info');
@@ -13,13 +14,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // News Elements
     const newsSection = document.getElementById('news-section');
+
     const newsList = document.getElementById('news-list');
+    const companySection = document.getElementById('company-section');
 
     // Chart Elements
     const chartCard = document.getElementById('chart-card');
     const chartContainer = document.getElementById('chart-container');
     let chart;
-    let candleSeries;
+    let candleSeries, ema50Series, ema200Series, volumeSeries;
 
     // Initialize Analyst & Portfolio
     const analyst = new StockifyAnalyst();
@@ -42,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnTrade.addEventListener('click', () => {
         const symbol = displaySymbol.textContent; // Get from current analysis
         if (!symbol || symbol === "SYMBOL") {
-            tradeFeedback.textContent = "❌ Please search for a stock first.";
+            tradeFeedback.textContent = i18n.t('err_search_first');
             tradeFeedback.style.color = "#ef4444";
             return;
         }
@@ -53,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const price = parseFloat(priceText);
 
         if (isNaN(price) || price <= 0) {
-            tradeFeedback.textContent = "❌ Invalid Price Data.";
+            tradeFeedback.textContent = i18n.t('err_invalid_price');
             return;
         }
 
@@ -105,6 +108,46 @@ document.addEventListener('DOMContentLoaded', () => {
                 wickUpColor: '#22c55e',
                 wickDownColor: '#ef4444',
             });
+
+            // EMA 50 (Green)
+            ema50Series = chart.addLineSeries({
+                color: '#22c55e',
+                lineWidth: 1,
+                crosshairMarkerVisible: false,
+                priceLineVisible: false, // Don't show horizontal line for EMA
+                lastValueVisible: false,
+            });
+
+            // EMA 200 (Red)
+            ema200Series = chart.addLineSeries({
+                color: '#ef4444',
+                lineWidth: 2,
+                crosshairMarkerVisible: false,
+                priceLineVisible: false,
+                lastValueVisible: false,
+            });
+
+            // Volume (Histogram) - Separate Scale
+            volumeSeries = chart.addHistogramSeries({
+                priceFormat: { type: 'volume' },
+                priceScaleId: '', // Overlay
+                color: '#26a69a',
+            });
+
+            // Configure Scales to separate Price and Volume
+            chart.priceScale('right').applyOptions({
+                scaleMargins: {
+                    top: 0.1,
+                    bottom: 0.3, // Leave space for volume
+                },
+            });
+
+            volumeSeries.priceScale().applyOptions({
+                scaleMargins: {
+                    top: 0.8, // Volume only in bottom 20%
+                    bottom: 0,
+                },
+            });
         } catch (error) {
             console.error("Error creating chart:", error);
             chartCard.innerHTML = `<div style="color:red; text-align:center; padding:1rem;">Error loading chart: ${error.message}</div>`;
@@ -121,20 +164,72 @@ document.addEventListener('DOMContentLoaded', () => {
         resizeObserver.observe(chartContainer);
     }
 
+    // --- Tab Switching Logic ---
+    window.switchTab = (tabName) => {
+        // Update Buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        if (tabName === 'chart') document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+        if (tabName === 'fund') document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+
+        // Update Views
+        if (tabName === 'chart') {
+            document.getElementById('chart-container').style.display = 'block';
+            document.getElementById('fundamentals-view').style.display = 'none';
+        } else {
+            document.getElementById('chart-container').style.display = 'none';
+            document.getElementById('fundamentals-view').style.display = 'block';
+        }
+    }
+
     // Backtest Button
     const btnBacktest = document.getElementById('btn-run-backtest');
     const backtestOverlay = document.getElementById('backtest-overlay');
+    const btModal = document.getElementById('bt-modal');
+    const closeBtModal = document.getElementById('close-bt-modal');
+    const btnStartBt = document.getElementById('btn-start-bt');
 
-    btnBacktest.addEventListener('click', async () => {
-        const symbol = displaySymbol.textContent;
-        if (!symbol || symbol === "SYMBOL") return;
+    // Config Inputs
+    const slRange = document.getElementById('in-sl');
+    const rsiBuyRange = document.getElementById('in-rsi-buy');
+    const rsiSellRange = document.getElementById('in-rsi-sell');
+    const dispSl = document.getElementById('disp-sl');
+    const dispRsiBuy = document.getElementById('disp-rsi-buy');
+    const dispRsiSell = document.getElementById('disp-rsi-sell');
 
-        btnBacktest.textContent = "Running... ⏳";
+    // 1. Open Configuration
+    btnBacktest.addEventListener('click', () => {
+        if (!currentSymbol) return;
+        btModal.style.display = 'flex';
+    });
+
+    // 2. Slider Logic
+    if (slRange) slRange.oninput = (e) => dispSl.textContent = e.target.value;
+    if (rsiBuyRange) rsiBuyRange.oninput = (e) => dispRsiBuy.textContent = e.target.value;
+    if (rsiSellRange) rsiSellRange.oninput = (e) => dispRsiSell.textContent = e.target.value;
+
+    // 3. Close Logic
+    if (closeBtModal) closeBtModal.onclick = () => btModal.style.display = 'none';
+    window.onclick = (e) => { if (e.target == btModal) btModal.style.display = 'none'; };
+
+    // 4. Run Logic
+    if (btnStartBt) btnStartBt.addEventListener('click', async () => {
+        btModal.style.display = 'none';
         backtestOverlay.style.display = 'block';
-        document.getElementById('bt-return').textContent = "...";
+        document.getElementById('bt-return').textContent = "Running...";
 
         try {
-            const res = await fetch(`http://localhost:5000/backtest/${symbol}`);
+            const params = {
+                rsi_buy: rsiBuyRange.value,
+                rsi_sell: rsiSellRange.value,
+                stop_loss: slRange.value
+            };
+
+            const res = await fetch('http://localhost:5000/backtest', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ symbol: currentSymbol, params: params })
+            });
+
             const data = await res.json();
 
             if (data.error) {
@@ -153,11 +248,11 @@ document.addEventListener('DOMContentLoaded', () => {
             winEl.textContent = `${data.win_rate.toFixed(1)}%`;
             tradeEl.textContent = data.total_trades;
 
-            btnBacktest.textContent = "Run Backtest 🔙";
+            btnBacktest.textContent = "Adjust Strategy ⚙️";
 
         } catch (e) {
             console.error(e);
-            btnBacktest.textContent = "Error";
+            backtestOverlay.innerHTML = `<div style="color:red;">Connection Error</div>`;
         }
     });
 
@@ -200,10 +295,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`http://localhost:5000/analyze/${symbol}`);
             const data = await response.json();
 
+            currentSymbol = symbol;
+
             if (data.error) {
                 if (isInitialLoad) showError(data.error);
                 return;
             }
+
+            // Update Star UI
+            updateStarUI(data.symbol);
 
             // Update UI with Data
             displaySymbol.textContent = data.symbol;
@@ -232,44 +332,138 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (data.history && data.history.length > 0) {
                 candleSeries.setData(data.history);
+
+                // Set EMA Data
+                const ema50Data = data.history.filter(h => h.ema50).map(h => ({ time: h.time, value: h.ema50 }));
+                const ema200Data = data.history.filter(h => h.ema200).map(h => ({ time: h.time, value: h.ema200 }));
+
+                if (ema50Series) ema50Series.setData(ema50Data);
+                if (ema200Series) ema200Series.setData(ema200Data);
+
+                // Set Volume Data
+                const volumeData = data.history.map(h => ({
+                    time: h.time,
+                    value: h.volume,
+                    color: h.close >= h.open ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'
+                }));
+                if (volumeSeries) volumeSeries.setData(volumeData);
+
+                // Set Markers (Signals) on Latest logic
+                const lastCandle = data.history[data.history.length - 1];
+                const markers = [];
+
+                // Parse Analyst Signal
+                // We run analyst.analyze(data) later, but we can peek at the signal logic or wait for it
+                // For simplicity, let's use the 'macd_bull' and 'rsi' from the server calculation if available,
+                // or just rely on the text signal.
+                // Better approach: Let's use the visual "Signal" badge logic from earlier or re-run simple logic here.
+
+                // Let's use the computed EMA crossover for a clear visual marker
+                const isUptrend = lastCandle.close > lastCandle.ema200;
+                let text = "";
+                let shape = "";
+                let color = "";
+
+                if (data.rsi < 30) {
+                    text = "OVERSOLD"; shape = "arrowUp"; color = "#22c55e";
+                } else if (data.rsi > 70) {
+                    text = "OVERBOUGHT"; shape = "arrowDown"; color = "#ef4444";
+                }
+
+                if (text) {
+                    markers.push({
+                        time: lastCandle.time,
+                        position: shape === 'arrowUp' ? 'belowBar' : 'aboveBar',
+                        color: color,
+                        shape: shape,
+                        text: text,
+                    });
+                }
+
+                candleSeries.setMarkers(markers);
+
                 if (isInitialLoad) chart.timeScale().fitContent();
             }
 
             // Company Profile & Holders (Only render on initial load)
-            if (isInitialLoad && data.profile) {
-                const companySection = document.getElementById('company-section');
-                if (companySection && data.profile.summary) {
-                    document.getElementById('prof-sector').textContent = data.profile.sector || '-';
-                    document.getElementById('prof-industry').textContent = data.profile.industry || '-';
-                    document.getElementById('prof-summary').textContent = data.profile.summary;
+            if (companySection && data.profile.summary) {
+                document.getElementById('prof-sector').textContent = data.profile.sector || '-';
+                document.getElementById('prof-industry').textContent = data.profile.industry || '-';
+                document.getElementById('prof-summary').textContent = data.profile.summary;
 
-                    const holdersList = document.getElementById('holders-list');
-                    holdersList.innerHTML = '';
-                    if (data.holders && data.holders.length > 0) {
-                        data.holders.forEach(h => {
-                            const li = document.createElement('li');
-                            li.innerHTML = `<span class="holder-val">${h.value}</span> <span class="holder-desc">${h.desc}</span>`;
-                            holdersList.appendChild(li);
-                        });
-                    } else {
-                        holdersList.innerHTML = '<li>Data not available</li>';
+                const holdersList = document.getElementById('holders-list');
+                holdersList.innerHTML = '';
+                if (data.holders && data.holders.length > 0) {
+                    data.holders.forEach(h => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `<span class="holder-val">${h.value}</span> <span class="holder-desc">${h.desc}</span>`;
+                        holdersList.appendChild(li);
+                    });
+                } else {
+                    holdersList.innerHTML = '<li>Data not available</li>';
+                }
+                companySection.style.display = 'grid';
+            }
+
+
+            // Populate Fundamentals (Every update)
+            if (data.fundamentals) {
+                const f = data.fundamentals;
+                // Helper to format
+                const fmt = (v) => v !== undefined && v !== null ? v.toFixed(2) : '-';
+
+                document.getElementById('val-pe').textContent = fmt(f.valuation.trailingPE);
+                document.getElementById('val-eps').textContent = fmt(f.valuation.trailingEps);
+                document.getElementById('val-pb').textContent = fmt(f.valuation.priceToBook);
+                document.getElementById('val-roe').textContent = fmt(f.profitability.returnOnEquity * 100) + '%';
+                document.getElementById('val-de').textContent = fmt(f.health.debtToEquity);
+
+                // Fair Value Logic
+                const fv = f.fairValue;
+                const fvBox = document.getElementById('val-fair');
+                const fvStatus = document.getElementById('val-status');
+                const meter = document.getElementById('val-meter');
+
+                if (fv) {
+                    fvBox.textContent = fv.toFixed(2);
+                    const upside = ((fv - data.price) / data.price) * 100;
+
+                    if (upside > 0) { // Undervalued
+                        fvStatus.textContent = `${i18n.t('fund_undervalued')} (+${upside.toFixed(1)}%)`;
+                        fvStatus.style.color = '#22c55e';
+                        fvStatus.style.background = 'rgba(34, 197, 94, 0.1)';
+                        meter.style.width = Math.min(100, 50 + (upside / 2)) + '%'; // Shift right
+                    } else { // Overvalued
+                        fvStatus.textContent = `${i18n.t('fund_overvalued')} (${upside.toFixed(1)}%)`;
+                        fvStatus.style.color = '#ef4444';
+                        fvStatus.style.background = 'rgba(239, 68, 68, 0.1)';
+                        meter.style.width = Math.max(0, 50 + (upside / 2)) + '%'; // Shift left
                     }
-                    companySection.style.display = 'grid';
+                } else {
+                    fvBox.textContent = 'N/A';
+                    fvStatus.textContent = 'Insufficient Data';
+                    meter.style.width = '50%';
                 }
             }
+
 
             // Analysis
             const analysisResult = analyst.analyze(data);
             const formattedText = analyst.formatOutput(analysisResult);
             resultOutput.innerHTML = parseMarkdown(formattedText);
 
+            // Render detailed Technical Scorecard
+            if (data.technical_analysis) {
+                renderTechnicalScore(data.technical_analysis);
+            }
+
             if (isInitialLoad) resultContainer.style.display = 'block';
 
             // --- Investment Calculator Logic (Time-Based) ---
             const calcSection = document.getElementById('calculator-section');
-            const budgetInput = document.getElementById('calc-budget');
-            const durationInput = document.getElementById('calc-duration-val'); // New
-            const unitInput = document.getElementById('calc-duration-unit'); // New
+            let budgetInput = document.getElementById('calc-budget');
+            let durationInput = document.getElementById('calc-duration-val'); // New
+            let unitInput = document.getElementById('calc-duration-unit'); // New
             const calcBody = document.getElementById('calc-body');
 
             // Define calculation function
@@ -294,9 +488,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Scenarios from Analyst 1-Year Targets
                 const scenarios = [
-                    { name: "🏰 Bear Case", target1Y: cons.targetLow, color: "#f87171" },
-                    { name: "⚖️ Base Case", target1Y: cons.targetMean, color: "#fbbf24" },
-                    { name: "🚀 Bull Case", target1Y: cons.targetHigh, color: "#34d399" }
+                    { name: i18n.t('scen_bear'), target1Y: cons.targetLow, color: "#f87171" },
+                    { name: i18n.t('scen_base'), target1Y: cons.targetMean, color: "#fbbf24" },
+                    { name: i18n.t('scen_bull'), target1Y: cons.targetHigh, color: "#34d399" }
                 ];
 
                 calcBody.innerHTML = '';
@@ -320,8 +514,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const totalGrowth = ((projectedPrice - currentPrice) / currentPrice) * 100;
 
                     const row = document.createElement('tr');
-                    const profitClass = profit >= 0 ? 'text-success' : 'text-danger';
-                    const profitColor = profit >= 0 ? '#34d399' : '#f87171';
+                    const profitClass = profit >= 0 ? 'text-up' : 'text-down';
+                    const profitColor = profit >= 0 ? 'var(--success-color)' : 'var(--danger-color)';
                     const sign = profit >= 0 ? '+' : '';
 
                     row.innerHTML = `
@@ -398,7 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showError(msg) {
         resultContainer.style.display = 'block';
-        resultOutput.innerHTML = `<div style="color: #ef4444; font-weight: bold; text-align: center;">❌ Error: ${msg}</div>`;
+        resultOutput.innerHTML = `<div style="color: #ef4444; font-weight: bold; text-align: center;">❌ ${i18n.t('error')}: ${msg}</div>`;
     }
 
     /**
@@ -412,11 +606,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Colorize the Signal
         if (html.includes("SIGNAL: BUY")) {
-            html = html.replace("SIGNAL: BUY", "SIGNAL: <span class='signal-buy'>BUY</span>");
+            html = html.replace("SIGNAL: BUY", `${i18n.t('col_signal')}: <span class='signal-buy'>${i18n.t('sig_buy')}</span>`);
         } else if (html.includes("SIGNAL: SELL")) {
-            html = html.replace("SIGNAL: SELL", "SIGNAL: <span class='signal-sell'>SELL</span>");
+            html = html.replace("SIGNAL: SELL", `${i18n.t('col_signal')}: <span class='signal-sell'>${i18n.t('sig_sell')}</span>`);
         } else if (html.includes("SIGNAL: WAIT")) {
-            html = html.replace("SIGNAL: WAIT", "SIGNAL: <span class='signal-wait'>WAIT</span>");
+            html = html.replace("SIGNAL: WAIT", `${i18n.t('col_signal')}: <span class='signal-wait'>${i18n.t('sig_wait')}</span>`);
         }
 
         return html;
@@ -475,8 +669,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 card.addEventListener('click', () => {
                     symbolInput.value = stock.symbol;
                     searchForm.dispatchEvent(new Event('submit'));
-                    // Optional: Scroll to top or hide discovery? 
-                    // Let's keep it visible for now or maybe collapse it.
                 });
 
                 discoveryGrid.appendChild(card);
@@ -487,7 +679,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function loadStockList() {
+        try {
+            const res = await fetch('http://localhost:5000/stocks');
+            const stocks = await res.json();
+            const dataList = document.getElementById('stock-list');
+
+            dataList.innerHTML = '';
+            stocks.forEach(symbol => {
+                const option = document.createElement('option');
+                option.value = symbol;
+                dataList.appendChild(option);
+            });
+        } catch (e) {
+            console.error("Failed to load stock list", e);
+        }
+    }
+
     // Call on Init
+    loadStockList();
     loadDiscovery();
 
     // NEW: Check for targetStock from Screener
@@ -498,4 +708,170 @@ document.addEventListener('DOMContentLoaded', () => {
         // Trigger search
         searchForm.dispatchEvent(new Event('submit'));
     }
+
+    // I18N Listener
+    window.addEventListener('langChange', () => {
+        // Reload discovery
+        loadDiscovery();
+
+        // Re-render data if displaying
+        if (currentSymbol) {
+            updateData(currentSymbol, false);
+        }
+
+        // Update Wallet
+        updateWalletUI();
+
+        // Update Wallet
+        updateWalletUI();
+
+        // Update Favorites Title
+        document.querySelector('[data-i18n="favorites"]').textContent = i18n.t('favorites');
+    });
+
+    // --- FAVORITES LOGIC ---
+    const favSection = document.getElementById('favorites-section');
+    const favGrid = document.getElementById('fav-grid');
+    const btnFav = document.getElementById('btn-fav');
+
+    function renderFavorites() {
+        const list = watchlist.getList();
+        if (list.length === 0) {
+            favSection.style.display = 'block';
+            favGrid.innerHTML = `<span style="color:var(--text-secondary); font-size:0.9rem;">${i18n.t('no_favs')}</span>`;
+            return;
+        }
+
+        favSection.style.display = 'block';
+        favGrid.innerHTML = '';
+
+        list.forEach(symbol => {
+            const tag = document.createElement('div');
+            tag.className = 'fav-tag';
+            tag.style = "background: rgba(255, 255, 255, 0.1); padding: 0.3rem 0.8rem; border-radius: 20px; cursor: pointer; border: 1px solid var(--glass-border); display: flex; align-items: center; gap: 0.5rem;";
+            tag.innerHTML = `<span>${symbol}</span> <span style="font-size:0.8rem; color:#ef4444;" class="rem-fav">✖</span>`;
+
+            // Navigate on click
+            tag.addEventListener('click', (e) => {
+                if (e.target.classList.contains('rem-fav')) return; // handled below
+                symbolInput.value = symbol;
+                searchForm.dispatchEvent(new Event('submit'));
+            });
+
+            // Remove btn
+            tag.querySelector('.rem-fav').addEventListener('click', (e) => {
+                e.stopPropagation();
+                watchlist.remove(symbol);
+                renderFavorites();
+                // Update Star if current symbol
+                if (currentSymbol === symbol) updateStarUI(symbol);
+            });
+
+            favGrid.appendChild(tag);
+        });
+    }
+
+    function updateStarUI(symbol) {
+        if (!symbol) return;
+        const processSymbol = symbol.toUpperCase();
+        if (watchlist.has(processSymbol)) {
+            btnFav.innerHTML = '★'; // Solid Star
+            btnFav.style.color = '#fbbf24'; // Gold
+            btnFav.title = i18n.t('rem_fav');
+        } else {
+            btnFav.innerHTML = '☆'; // Hollow Star
+            btnFav.style.color = 'var(--text-secondary)';
+            btnFav.title = i18n.t('add_fav');
+        }
+    }
+
+    btnFav.addEventListener('click', () => {
+        if (!currentSymbol) return;
+        watchlist.toggle(currentSymbol);
+        updateStarUI(currentSymbol);
+        renderFavorites();
+    });
+
+    // Listen for custom event from other tabs/modules
+    window.addEventListener('favChange', () => {
+        renderFavorites();
+        if (currentSymbol) updateStarUI(currentSymbol);
+    });
+
+    // Init
+    renderFavorites();
+
+    // --- Tab Switching Logic ---
+    window.switchTab = (tab) => {
+        const chartC = document.getElementById('chart-container');
+        const fundV = document.getElementById('fundamentals-view');
+        const techV = document.getElementById('technical-view');
+        const btns = document.querySelectorAll('.tab-btn');
+
+        // Hide all
+        chartC.style.display = 'none';
+        fundV.style.display = 'none';
+        techV.style.display = 'none';
+        btns.forEach(b => b.classList.remove('active'));
+
+        // Show selected
+        if (tab === 'chart') {
+            chartC.style.display = 'block';
+            btns[0].classList.add('active');
+        } else if (tab === 'fund') {
+            fundV.style.display = 'block';
+            btns[1].classList.add('active');
+        } else if (tab === 'tech') {
+            techV.style.display = 'block';
+            btns[2].classList.add('active');
+        }
+    };
+
+    // --- Technical Scorecard Render ---
+    function renderTechnicalScore(techData) {
+        if (!techData || !techData.score) return;
+
+        // 1. Score Dial
+        const scoreVal = document.getElementById('tech-score-val');
+        const scoreCircle = document.getElementById('tech-score-circle');
+        const sentiment = document.getElementById('tech-sentiment');
+
+        scoreVal.textContent = techData.score;
+        sentiment.textContent = techData.sentiment;
+
+        // Color Logic
+        let color = '#fbbf24'; // Neutral
+        if (techData.score >= 65) color = '#22c55e'; // Green
+        if (techData.score <= 35) color = '#ef4444'; // Red
+
+        scoreCircle.style.borderColor = color;
+        scoreVal.style.color = color;
+        sentiment.style.color = color;
+
+        // 2. Signals Table
+        const tbody = document.getElementById('tech-signals-body');
+        tbody.innerHTML = '';
+
+        techData.signals.forEach(sig => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="padding:0.75rem; border-bottom:1px solid rgba(255,255,255,0.05);">${sig.name}</td>
+                <td style="padding:0.75rem; border-bottom:1px solid rgba(255,255,255,0.05); font-weight:bold;">${sig.val}</td>
+                <td style="padding:0.75rem; border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <span class="signal-badge ${sig.act}">${sig.act}</span>
+                </td>
+                <td style="padding:0.75rem; border-bottom:1px solid rgba(255,255,255,0.05); opacity:0.8; font-size:0.9rem;">${sig.desc}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Handle URL Params (e.g. from Heatmap)
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlSymbol = urlParams.get('symbol');
+    if (urlSymbol) {
+        symbolInput.value = urlSymbol;
+        setTimeout(() => searchForm.dispatchEvent(new Event('submit')), 100);
+    }
 });
+let currentSymbol = null; // Track current symbol global or scoped up
