@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Analysis | Stockify Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Outfit:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .analysis-container {
+            padding: 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            padding: 2rem 1rem 1.5rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-section {
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(30, 41, 59, 0.8);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .search-box button {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: none;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            border: none;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .analysis-card {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .analysis-card h3 {
+            margin: 0 0 1.5rem 0;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 0.3rem;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        th {
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 500;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .badge {
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge.positive {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+
+        .badge.negative {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .badge.neutral {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+        }
+
+        .prediction-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 0.5rem;
+            height: 150px;
+            margin: 1.5rem 0;
+        }
+
+        .pred-bar {
+            flex: 1;
+            background: linear-gradient(to top, #6366f1, #8b5cf6);
+            border-radius: 6px 6px 0 0;
+            position: relative;
+        }
+
+        .pred-bar span {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .signal-display {
+            text-align: center;
+            padding: 2rem;
+            border-radius: 16px;
+            margin: 1.5rem 0;
+        }
+
+        .signal-text {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .confidence-bar {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.5s;
+        }
+
+        .news-item {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .news-item:last-child {
+            border-bottom: none;
+        }
+
+        .news-title {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .news-title:hover {
+            text-decoration: underline;
+        }
+
+        .news-meta {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 0.3rem;
+        }
+
+        .dividend-history {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .div-item {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            text-align: center;
+        }
+
+        .div-amount {
+            font-weight: 600;
+            color: #22c55e;
+        }
+
+        .div-date {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        #loading,
+        #result {
+            display: none;
+        }
+
+        #loading {
+            text-align: center;
+            padding: 3rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .stat-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">📈 Stockify Pro</a>
+        <div class="nav-links">
+            <a href="index.html" data-i18n="nav_analyzer">📊 Analyzer</a>
+            <a href="screener.html" data-i18n="nav_screener">🔍 Screener</a>
+            <a href="compare.html" data-i18n="nav_compare">⚖️ Compare</a>
+            <a href="advanced.html" class="active" data-i18n="nav_advanced">🧠 Advanced</a>
+            <a href="insider.html" data-i18n="nav_insider">👔 Insider</a>
+            <a href="darkpool.html" data-i18n="nav_darkpool">🌊 Dark Pool</a>
+            <a href="earnings.html" data-i18n="nav_earnings">📅 Earnings</a>
+            <a href="calendar.html" data-i18n="nav_calendar">📆 Calendar</a>
+            <a href="sectors.html" data-i18n="nav_sectors">🔄 Sectors</a>
+            <a href="heatmap.html" data-i18n="nav_heatmap">🗺️ Heatmap</a>
+            <a href="volatility.html" data-i18n="nav_volatility">⚡ Volatility</a>
+            <a href="portfolio.html" data-i18n="nav_portfolio">💼 Portfolio</a>
+        </div>
+    </nav>
+
+    <main class="analysis-container">
+        <div class="page-header">
+            <h1 data-i18n="advanced_title">🧠 Advanced Stock Analysis</h1>
+            <p data-i18n="advanced_sub">AI Prediction • Sentiment • Dividends • Institutional</p>
+        </div>
+
+        <div class="search-section">
+            <div class="search-box">
+                <input type="text" id="symbol-input" placeholder="Enter stock symbol (e.g. AAPL, MSFT)" value="AAPL">
+                <button onclick="loadAnalysis()">Analyze</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('predict')" data-i18n="tab_prediction">🤖 AI
+                Prediction</button>
+            <button class="tab" onclick="switchTab('sentiment')" data-i18n="tab_sentiment">📰 Sentiment</button>
+            <button class="tab" onclick="switchTab('dividends')" data-i18n="tab_dividends">💰 Dividends</button>
+            <button class="tab" onclick="switchTab('institutional')" data-i18n="tab_institutional">🏦
+                Institutional</button>
+        </div>
+
+        <div id="loading">Loading... ⏳</div>
+
+        <div id="result">
+            <!-- AI Prediction -->
+            <div id="predict-panel" class="analysis-card">
+                <h3>🤖 AI Price Prediction</h3>
+                <div class="signal-display" id="signal-box">
+                    <div class="signal-text" id="signal-text">-</div>
+                    <div style="margin-top: 0.5rem; color: rgba(255,255,255,0.6);">7-Day Signal</div>
+                </div>
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <div class="stat-value" id="current-price">-</div>
+                        <div class="stat-label">Current Price</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="predicted-price">-</div>
+                        <div class="stat-label">Predicted (7D)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="change-pct">-</div>
+                        <div class="stat-label">Expected Change</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="confidence">-</div>
+                        <div class="stat-label">Confidence</div>
+                    </div>
+                </div>
+                <div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Trend: <span id="trend">-</span></span>
+                        <span>Volatility: <span id="volatility">-</span>%</span>
+                        <span>Momentum: <span id="momentum">-</span>%</span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" id="conf-fill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sentiment -->
+            <div id="sentiment-panel" class="analysis-card" style="display:none;">
+                <h3>📰 News Sentiment Analysis</h3>
+                <div class="stat-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="stat-box">
+                        <div class="stat-value" id="overall-sentiment">-</div>
+                        <div class="stat-label">Overall Sentiment</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="sentiment-score">-</div>
+                        <div class="stat-label">Sentiment Score</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="news-count">-</div>
+                        <div class="stat-label">News Articles</div>
+                    </div>
+                </div>
+                <div id="news-list"></div>
+            </div>
+
+            <!-- Dividends -->
+            <div id="dividends-panel" class="analysis-card" style="display:none;">
+                <h3>💰 Dividend Tracker</h3>
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <div class="stat-value" id="div-yield" style="color:#22c55e;">-</div>
+                        <div class="stat-label">Dividend Yield</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="div-rate">-</div>
+                        <div class="stat-label">Annual Dividend</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="payout-ratio">-</div>
+                        <div class="stat-label">Payout Ratio</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="ex-div-date">-</div>
+                        <div class="stat-label">Ex-Dividend Date</div>
+                    </div>
+                </div>
+                <h4 style="margin: 1.5rem 0 1rem 0;">📅 Dividend History</h4>
+                <div class="dividend-history" id="div-history"></div>
+            </div>
+
+            <!-- Institutional -->
+            <div id="institutional-panel" class="analysis-card" style="display:none;">
+                <h3>🏦 Institutional Ownership</h3>
+                <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <div class="stat-box">
+                        <div class="stat-value" id="inst-ownership" style="color:#6366f1;">-</div>
+                        <div class="stat-label">Institutional Ownership</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="insider-ownership" style="color:#ec4899;">-</div>
+                        <div class="stat-label">Insider Ownership</div>
+                    </div>
+                </div>
+                <h4 style="margin: 1.5rem 0 1rem 0;">🏢 Top Institutional Holders</h4>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Holder</th>
+                                <th>Shares</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inst-table"></tbody>
+                    </table>
+                </div>
+                <h4 style="margin: 1.5rem 0 1rem 0;">👤 Insider Transactions</h4>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Insider</th>
+                                <th>Transaction</th>
+                                <th>Shares</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="insider-table"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/core/i18n.js"></script>
+    <script>
+        let currentTab = 'predict';
+        let currentSymbol = 'AAPL';
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+
+            ['predict', 'sentiment', 'dividends', 'institutional'].forEach(p => {
+                document.getElementById(p + '-panel').style.display = p === tab ? 'block' : 'none';
+            });
+        }
+
+        async function loadAnalysis() {
+            currentSymbol = document.getElementById('symbol-input').value.toUpperCase();
+            if (!currentSymbol) return;
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+
+            try {
+                // Load all data in parallel
+                const [predict, sentiment, dividends, institutional] = await Promise.all([
+                    fetch(`http://localhost:5000/predict/${currentSymbol}`).then(r => r.json()).catch(() => null),
+                    fetch(`http://localhost:5000/sentiment/${currentSymbol}`).then(r => r.json()).catch(() => null),
+                    fetch(`http://localhost:5000/dividends/${currentSymbol}`).then(r => r.json()).catch(() => null),
+                    fetch(`http://localhost:5000/institutional/${currentSymbol}`).then(r => r.json()).catch(() => null)
+                ]);
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('result').style.display = 'block';
+
+                // Render Prediction
+                if (predict && !predict.error) {
+                    document.getElementById('signal-text').textContent = predict.signal;
+                    document.getElementById('signal-box').style.background = `linear-gradient(135deg, ${predict.signal_color}20, ${predict.signal_color}10)`;
+                    document.getElementById('signal-box').style.border = `2px solid ${predict.signal_color}`;
+                    document.getElementById('signal-text').style.color = predict.signal_color;
+
+                    document.getElementById('current-price').textContent = '$' + predict.current_price;
+                    document.getElementById('predicted-price').textContent = '$' + predict.predicted_7d;
+                    document.getElementById('change-pct').textContent = (predict.change_pct > 0 ? '+' : '') + predict.change_pct + '%';
+                    document.getElementById('change-pct').style.color = predict.change_pct > 0 ? '#22c55e' : '#ef4444';
+                    document.getElementById('confidence').textContent = predict.confidence + '%';
+
+                    document.getElementById('trend').textContent = predict.trend;
+                    document.getElementById('trend').style.color = predict.trend === 'UP' ? '#22c55e' : '#ef4444';
+                    document.getElementById('volatility').textContent = predict.volatility;
+                    document.getElementById('momentum').textContent = predict.momentum;
+
+                    document.getElementById('conf-fill').style.width = predict.confidence + '%';
+                    document.getElementById('conf-fill').style.background = predict.signal_color;
+                }
+
+                // Render Sentiment
+                if (sentiment && !sentiment.error) {
+                    document.getElementById('overall-sentiment').textContent = sentiment.overall_sentiment;
+                    document.getElementById('overall-sentiment').style.color = sentiment.sentiment_color;
+                    document.getElementById('sentiment-score').textContent = sentiment.sentiment_score;
+                    document.getElementById('news-count').textContent = sentiment.news_count;
+
+                    const newsList = document.getElementById('news-list');
+                    newsList.innerHTML = sentiment.news.map(n => `
+                        <div class="news-item">
+                            <a href="${n.link}" target="_blank" class="news-title">${n.title}</a>
+                            <div class="news-meta">
+                                <span class="badge ${n.sentiment}">${n.sentiment.toUpperCase()}</span>
+                                ${n.publisher} • ${n.date}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                // Render Dividends
+                if (dividends && !dividends.error) {
+                    document.getElementById('div-yield').textContent = (dividends.dividend_yield || 0) + '%';
+                    document.getElementById('div-rate').textContent = '$' + (dividends.annual_dividend || 0);
+                    document.getElementById('payout-ratio').textContent = dividends.payout_ratio ? dividends.payout_ratio + '%' : 'N/A';
+                    document.getElementById('ex-div-date').textContent = dividends.ex_dividend_date || 'N/A';
+
+                    const divHist = document.getElementById('div-history');
+                    divHist.innerHTML = dividends.dividend_history.map(d => `
+                        <div class="div-item">
+                            <div class="div-amount">$${d.amount.toFixed(2)}</div>
+                            <div class="div-date">${d.date}</div>
+                        </div>
+                    `).join('') || '<span style="color:rgba(255,255,255,0.5);">No dividend history</span>';
+                }
+
+                // Render Institutional
+                if (institutional && !institutional.error) {
+                    document.getElementById('inst-ownership').textContent = institutional.institutional_ownership + '%';
+                    document.getElementById('insider-ownership').textContent = institutional.insider_ownership + '%';
+
+                    const instTable = document.getElementById('inst-table');
+                    instTable.innerHTML = institutional.top_institutions.map(i => `
+                        <tr>
+                            <td>${i.holder}</td>
+                            <td>${(i.shares / 1000000).toFixed(2)}M</td>
+                            <td>$${(i.value / 1000000000).toFixed(2)}B</td>
+                        </tr>
+                    `).join('') || '<tr><td colspan="3">No data</td></tr>';
+
+                    const insiderTable = document.getElementById('insider-table');
+                    insiderTable.innerHTML = institutional.insider_transactions.map(t => `
+                        <tr>
+                            <td>${t.insider}</td>
+                            <td>${t.transaction}</td>
+                            <td>${t.shares.toLocaleString()}</td>
+                            <td>${t.date}</td>
+                        </tr>
+                    `).join('') || '<tr><td colspan="4">No transactions</td></tr>';
+                }
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loading').innerHTML = '<span style="color:#ef4444;">Error loading data</span>';
+            }
+        }
+
+        // Load on enter
+        document.getElementById('symbol-input').addEventListener('keypress', e => {
+            if (e.key === 'Enter') loadAnalysis();
+        });
+
+        // Initial load
+        loadAnalysis();
+    </script>
+</body>
+
+</html>

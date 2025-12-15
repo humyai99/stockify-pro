@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Calendar | Stockify Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Outfit:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .calendar-container {
+            padding: 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            padding: 2rem 1rem 1.5rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .filter-bar {
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-color: transparent;
+        }
+
+        .filter-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .event-card {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .event-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
+        }
+
+        .event-date {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            margin-bottom: 0.25rem;
+        }
+
+        .event-month {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .event-type-badge {
+            display: inline-block;
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+        }
+
+        .event-type-badge.earnings {
+            background: rgba(139, 92, 246, 0.2);
+            color: #c4b5fd;
+        }
+
+        .event-type-badge.dividend {
+            background: rgba(34, 197, 94, 0.2);
+            color: #86efac;
+        }
+
+        .event-type-badge.economic {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fde047;
+        }
+
+        .importance-critical {
+            border-left: 4px solid #ef4444;
+        }
+
+        .importance-high {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .importance-medium {
+            border-left: 4px solid #3b82f6;
+        }
+
+        .event-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .event-symbol {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #a5b4fc;
+            margin-right: 0.5rem;
+        }
+
+        .event-company {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 0.25rem;
+        }
+
+        .event-time {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 0.5rem;
+        }
+
+        .event-description {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        .timeline-view {
+            display: none;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            padding-left: 2rem;
+            border-left: 2px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .timeline-date {
+            min-width: 100px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        #loading {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
+
+        @media (max-width: 768px) {
+            .calendar-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-btn {
+                text-align: center;
+            }
+
+            .event-date {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">📈 Stockify Pro</a>
+        <div class="nav-links">
+            <a href="index.html" data-i18n="nav_analyzer">📊 Analyzer</a>
+            <a href="screener.html" data-i18n="nav_screener">🔍 Screener</a>
+            <a href="compare.html" data-i18n="nav_compare">⚖️ Compare</a>
+            <a href="advanced.html" data-i18n="nav_advanced">🧠 Advanced</a>
+            <a href="insider.html" data-i18n="nav_insider">👔 Insider</a>
+            <a href="darkpool.html" data-i18n="nav_darkpool">🌊 Dark Pool</a>
+            <a href="earnings.html" data-i18n="nav_earnings">📅 Earnings</a>
+            <a href="calendar.html" class="active" data-i18n="nav_calendar">📆 Calendar</a>
+            <a href="sectors.html" data-i18n="nav_sectors">🔄 Sectors</a>
+            <a href="heatmap.html" data-i18n="nav_heatmap">🗺️ Heatmap</a>
+            <a href="volatility.html" data-i18n="nav_volatility">⚡ Volatility</a>
+            <a href="portfolio.html" data-i18n="nav_portfolio">💼 Portfolio</a>
+        </div>
+    </nav>
+
+    <main class="calendar-container">
+        <div class="page-header">
+            <h1 data-i18n="calendar_title">📅 Financial Calendar</h1>
+            <p data-i18n="calendar_sub">Track earnings, dividends & economic events</p>
+        </div>
+
+        <div class="filter-bar">
+            <div style="flex: 1;">
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="filter-btn active" data-type="all" onclick="filterEvents('all')">
+                        <span data-i18n="filter_all">All Events</span> (<span id="count-all">0</span>)
+                    </button>
+                    <button class="filter-btn" data-type="earnings" onclick="filterEvents('earnings')">
+                        <span data-i18n="event_earnings">📊 Earnings</span> (<span id="count-earnings">0</span>)
+                    </button>
+                    <button class="filter-btn" data-type="dividend" onclick="filterEvents('dividend')">
+                        <span data-i18n="event_dividend">💰 Dividends</span> (<span id="count-dividend">0</span>)
+                    </button>
+                    <button class="filter-btn" data-type="economic" onclick="filterEvents('economic')">
+                        <span data-i18n="event_economic">📈 Economic</span> (<span id="count-economic">0</span>)
+                    </button>
+                </div>
+            </div>
+            <div class="view-toggle">
+                <button class="filter-btn active" onclick="switchView('grid')">Grid</button>
+                <button class="filter-btn" onclick="switchView('timeline')">Timeline</button>
+            </div>
+        </div>
+
+        <div id="loading">Loading events... ⏳</div>
+
+        <div id="grid-view" class="calendar-grid"></div>
+        <div id="timeline-view" class="timeline-view"></div>
+    </main>
+
+    <script src="js/core/i18n.js"></script>
+    <script>
+        let allEvents = [];
+        let currentFilter = 'all';
+        let currentView = 'grid';
+
+        async function loadCalendar() {
+            document.getElementById('loading').style.display = 'block';
+
+            try {
+                const response = await fetch('http://localhost:5000/calendar');
+                const data = await response.json();
+
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+
+                allEvents = data.events;
+
+                document.getElementById('loading').style.display = 'none';
+
+                updateCounts();
+                renderEvents();
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('loading').innerHTML = '<span style="color:#ef4444;">Error loading calendar</span>';
+            }
+        }
+
+        function updateCounts() {
+            document.getElementById('count-all').textContent = allEvents.length;
+            document.getElementById('count-earnings').textContent = allEvents.filter(e => e.type === 'earnings').length;
+            document.getElementById('count-dividend').textContent = allEvents.filter(e => e.type === 'dividend').length;
+            document.getElementById('count-economic').textContent = allEvents.filter(e => e.type === 'economic').length;
+        }
+
+        function filterEvents(type) {
+            currentFilter = type;
+
+            // Update active button
+            document.querySelectorAll('[data-type]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.type === type);
+            });
+
+            renderEvents();
+        }
+
+        function switchView(view) {
+            currentView = view;
+
+            document.querySelectorAll('.view-toggle .filter-btn').forEach((btn, idx) => {
+                btn.classList.toggle('active', (view === 'grid' && idx === 0) || (view === 'timeline' && idx === 1));
+            });
+
+            document.getElementById('grid-view').style.display = view === 'grid' ? 'grid' : 'none';
+            document.getElementById('timeline-view').style.display = view === 'timeline' ? 'block' : 'none';
+
+            renderEvents();
+        }
+
+        function renderEvents() {
+            const filtered = currentFilter === 'all'
+                ? allEvents
+                : allEvents.filter(e => e.type === currentFilter);
+
+            if (currentView === 'grid') {
+                renderGridView(filtered);
+            } else {
+                renderTimelineView(filtered);
+            }
+        }
+
+        function renderGridView(events) {
+            const container = document.getElementById('grid-view');
+
+            if (events.length === 0) {
+                container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: rgba(255,255,255,0.5);">No events found</div>';
+                return;
+            }
+
+            container.innerHTML = events.map(event => {
+                const date = new Date(event.date);
+                const day = date.getDate();
+                const month = date.toLocaleDateString('en-US', { month: 'short' });
+                const importanceClass = `importance-${event.importance || 'medium'}`;
+
+                return `
+                    <div class="event-card ${importanceClass}" onclick="showEventDetail('${event.symbol || ''}')">
+                        <div class="event-date">${day}</div>
+                        <div class="event-month">${month} ${date.getFullYear()}</div>
+                        
+                        <div class="event-type-badge ${event.type}">${event.type}</div>
+                        
+                        <div class="event-title">
+                            ${event.symbol ? `<span class="event-symbol">${event.symbol}</span>` : ''}
+                            ${event.title}
+                        </div>
+                        
+                        ${event.company ? `<div class="event-company">${event.company}</div>` : ''}
+                        ${event.time ? `<div class="event-time">🕐 ${event.time}</div>` : ''}
+                        ${event.description ? `<div class="event-description">${event.description}</div>` : ''}
+                        ${event.amount ? `<div class="event-time">💵 Dividend: $${event.amount}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderTimelineView(events) {
+            const container = document.getElementById('timeline-view');
+
+            if (events.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 3rem; color: rgba(255,255,255,0.5);">No events found</div>';
+                return;
+            }
+
+            container.innerHTML = events.map(event => {
+                const date = new Date(event.date);
+                const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+                return `
+                    <div class="timeline-item">
+                        <div class="timeline-date">${dateStr}${event.time ? `<br>${event.time}` : ''}</div>
+                        <div class="timeline-content">
+                            <div class="event-type-badge ${event.type}">${event.type}</div>
+                            <div class="event-title">
+                                ${event.symbol ? `<span class="event-symbol">${event.symbol}</span>` : ''}
+                                ${event.title}
+                            </div>
+                            ${event.company ? `<div class="event-company">${event.company}</div>` : ''}
+                            ${event.description ? `<div class="event-description">${event.description}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showEventDetail(symbol) {
+            if (symbol) {
+                window.location.href = `index.html?symbol=${symbol}`;
+            }
+        }
+
+        // Initial load
+        loadCalendar();
+    </script>
+</body>
+
+</html>

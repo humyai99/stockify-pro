@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sector Rotation | Stockify Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Outfit:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .sector-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.25rem;
+            padding: 1rem;
+        }
+
+        .sector-card {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sector-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        }
+
+        .sector-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .sector-card.leading {
+            border-left: 4px solid #22c55e;
+            box-shadow: -10px 0 20px rgba(34, 197, 94, 0.1);
+        }
+
+        .sector-card.lagging {
+            border-left: 4px solid #ef4444;
+            box-shadow: -10px 0 20px rgba(239, 68, 68, 0.1);
+        }
+
+        .sector-card.neutral {
+            border-left: 4px solid #fbbf24;
+        }
+
+        .sector-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .sector-name {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .sector-rank {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.35rem 0.9rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sector-rank.leading {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .sector-rank.lagging {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .perf-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.6rem 0;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .perf-row:last-of-type {
+            border-bottom: none;
+        }
+
+        .perf-label {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .perf-value {
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .perf-value.up {
+            color: #22c55e;
+        }
+
+        .perf-value.down {
+            color: #ef4444;
+        }
+
+        .momentum-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            margin-top: 1.25rem;
+            overflow: hidden;
+        }
+
+        .momentum-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .trend-badge {
+            display: inline-block;
+            padding: 0.3rem 0.7rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .trend-badge.UP {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .trend-badge.DOWN {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .trend-badge.SIDEWAYS {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin: 1.5rem 1rem;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .summary-item h3 {
+            font-size: 1.8rem;
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .summary-item p {
+            color: rgba(255, 255, 255, 0.6);
+            margin: 0.75rem 0 0 0;
+            font-size: 0.9rem;
+        }
+
+        #loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 5rem;
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .rotation-legend {
+            display: flex;
+            justify-content: center;
+            gap: 2.5rem;
+            margin: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .legend-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        .legend-dot.leading {
+            background: #22c55e;
+            color: #22c55e;
+        }
+
+        .legend-dot.neutral {
+            background: #fbbf24;
+            color: #fbbf24;
+        }
+
+        .legend-dot.lagging {
+            background: #ef4444;
+            color: #ef4444;
+        }
+
+        .page-header {
+            text-align: center;
+            padding: 2.5rem 1rem 1.5rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-header p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .summary-card {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .rotation-legend {
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">📈 Stockify Pro</a>
+        <div class="nav-links">
+            <a href="index.html" data-i18n="nav_analyzer">📊 Analyzer</a>
+            <a href="screener.html" data-i18n="nav_screener">🔍 Screener</a>
+            <a href="compare.html" data-i18n="nav_compare">⚖️ Compare</a>
+            <a href="advanced.html" data-i18n="nav_advanced">🧠 Advanced</a>
+            <a href="insider.html" data-i18n="nav_insider">👔 Insider</a>
+            <a href="darkpool.html" data-i18n="nav_darkpool">🌊 Dark Pool</a>
+            <a href="earnings.html" data-i18n="nav_earnings">📅 Earnings</a>
+            <a href="calendar.html" data-i18n="nav_calendar">📆 Calendar</a>
+            <a href="sectors.html" class="active" data-i18n="nav_sectors">🔄 Sectors</a>
+            <a href="heatmap.html" data-i18n="nav_heatmap">🗺️ Heatmap</a>
+            <a href="volatility.html" data-i18n="nav_volatility">⚡ Volatility</a>
+            <a href="portfolio.html" data-i18n="nav_portfolio">💼 Portfolio</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="page-header">
+            <h1 data-i18n="sectors_title">🔄 Sector Rotation Analysis</h1>
+            <p data-i18n="sectors_sub">Track money flow across market sectors</p>
+        </div>
+
+        <div class="rotation-legend">
+            <div class="legend-item">
+                <div class="legend-dot leading"></div>
+                <span data-i18n="sect_leading">Leading (Top 3)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot neutral"></div>
+                <span data-i18n="sect_neutral">Neutral</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot lagging"></div>
+                <span data-i18n="sect_lagging">Lagging (Bottom 3)</span>
+            </div>
+        </div>
+
+        <div id="summary" class="summary-card" style="display: none;">
+            <div class="summary-item">
+                <h3 id="top-sector" style="color: #22c55e;">-</h3>
+                <p>🏆 <span data-i18n="sect_strongest">Strongest Sector</span></p>
+            </div>
+            <div class="summary-item">
+                <h3 id="avg-momentum">-</h3>
+                <p>📊 <span data-i18n="sect_avg_mom">Avg Momentum</span></p>
+            </div>
+            <div class="summary-item">
+                <h3 id="market-trend" style="color: #fbbf24;">-</h3>
+                <p>📈 <span data-i18n="sect_mkt_trend">Market Trend</span></p>
+            </div>
+        </div>
+
+        <div id="loading">
+            <span data-i18n="loading">Loading sector data... ⏳</span>
+        </div>
+
+        <div id="sector-container" class="sector-grid"></div>
+
+        <div style="text-align: center; padding: 1.5rem; color: rgba(255,255,255,0.4); font-size: 0.8rem;">
+            <span id="update-time">Last updated: -</span>
+        </div>
+    </main>
+
+    <!-- Language Switcher -->
+    <div id="lang-switcher"></div>
+
+    <script src="js/core/i18n.js"></script>
+    <script>
+        // i18n is already initialized globally by i18n.js
+
+        async function loadSectors() {
+            try {
+                const res = await fetch('http://localhost:5000/sectors');
+                const data = await res.json();
+
+                if (data.error) {
+                    document.getElementById('loading').innerHTML = `<span style="color:#ef4444;">Error: ${data.error}</span>`;
+                    return;
+                }
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('summary').style.display = 'grid';
+
+                const container = document.getElementById('sector-container');
+                container.innerHTML = '';
+
+                // Summary
+                if (data.sectors.length > 0) {
+                    document.getElementById('top-sector').textContent = data.sectors[0].sector;
+
+                    const avgMom = data.sectors.reduce((a, b) => a + b.momentum, 0) / data.sectors.length;
+                    document.getElementById('avg-momentum').textContent = avgMom.toFixed(2) + '%';
+                    document.getElementById('avg-momentum').style.color = avgMom > 0 ? '#22c55e' : '#ef4444';
+
+                    const upCount = data.sectors.filter(s => s.trend === 'UP').length;
+                    const trend = upCount > 6 ? 'BULLISH' : (upCount < 4 ? 'BEARISH' : 'MIXED');
+                    document.getElementById('market-trend').textContent = trend;
+                    document.getElementById('market-trend').style.color = trend === 'BULLISH' ? '#22c55e' : (trend === 'BEARISH' ? '#ef4444' : '#fbbf24');
+                }
+
+                // Render cards
+                data.sectors.forEach(sector => {
+                    const card = document.createElement('div');
+                    const statusClass = sector.status.toLowerCase();
+                    card.className = `sector-card ${statusClass}`;
+
+                    const momColor = sector.momentum >= 0 ? '#22c55e' : '#ef4444';
+                    const momWidth = Math.min(Math.abs(sector.momentum) * 5, 100);
+
+                    card.innerHTML = `
+                        <div class="sector-header">
+                            <span class="sector-name">${sector.sector}</span>
+                            <span class="sector-rank ${statusClass}">#${sector.rank} ${sector.status}</span>
+                        </div>
+                        
+                        <div class="perf-row">
+                            <span class="perf-label">${i18n.t('col_price')}</span>
+                            <span class="perf-value">$${sector.price}</span>
+                        </div>
+                        
+                        <div class="perf-row">
+                            <span class="perf-label">${i18n.t('sect_1d')}</span>
+                            <span class="perf-value ${sector.change_1d >= 0 ? 'up' : 'down'}">${sector.change_1d >= 0 ? '+' : ''}${sector.change_1d}%</span>
+                        </div>
+                        
+                        <div class="perf-row">
+                            <span class="perf-label">${i18n.t('sect_1w')}</span>
+                            <span class="perf-value ${sector.change_1w >= 0 ? 'up' : 'down'}">${sector.change_1w >= 0 ? '+' : ''}${sector.change_1w}%</span>
+                        </div>
+                        
+                        <div class="perf-row">
+                            <span class="perf-label">${i18n.t('sect_1m')}</span>
+                            <span class="perf-value ${sector.change_1m >= 0 ? 'up' : 'down'}">${sector.change_1m >= 0 ? '+' : ''}${sector.change_1m}%</span>
+                        </div>
+                        
+                        <div class="perf-row">
+                            <span class="perf-label">${i18n.t('sect_volume')}</span>
+                            <span class="perf-value">${sector.volume_ratio}x</span>
+                        </div>
+                        
+                        <div class="momentum-bar">
+                            <div class="momentum-fill" style="width: ${momWidth}%; background: linear-gradient(90deg, ${momColor}, ${momColor}88);"></div>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+                            <span class="trend-badge ${sector.trend}">${sector.trend}</span>
+                            <span style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">${i18n.t('sect_momentum')}: ${sector.momentum}%</span>
+                        </div>
+                    `;
+
+                    container.appendChild(card);
+                });
+
+                // Update time
+                const updateTime = new Date(data.updated).toLocaleString();
+                document.getElementById('update-time').textContent = `Last updated: ${updateTime}`;
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loading').innerHTML = `<span style="color:#ef4444;">Failed to load data. Is the server running?</span>`;
+            }
+        }
+
+        // Load on page load
+        loadSectors();
+
+        // Re-render on language change
+        window.addEventListener('langChange', loadSectors);
+
+        // Auto-refresh every 5 minutes
+        setInterval(loadSectors, 5 * 60 * 1000);
+    </script>
+</body>
+
+</html>

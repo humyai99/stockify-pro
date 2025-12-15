@@ -4,145 +4,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stockify Pro Screener 🔍</title>
-    <link rel="stylesheet" href="css/style.css">
-    <style>
-        /* Screener Specific Styles */
-        .nav-bar {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .nav-link {
-            text-decoration: none;
-            color: var(--text-secondary);
-            font-weight: 600;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            transition: all 0.2s;
-        }
-
-        .nav-link.active {
-            background: var(--accent-color);
-            color: white;
-        }
-
-        .nav-link:hover:not(.active) {
-            background: var(--card-bg);
-            color: var(--text-primary);
-        }
-
-        .screener-table {
-            width: 100%;
-            border-collapse: collapse;
-            color: var(--text-primary);
-        }
-
-        .screener-table th,
-        .screener-table td {
-            text-align: left;
-            padding: 1rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .screener-table th {
-            color: var(--text-secondary);
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-
-        .screener-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .screener-table tr:hover {
-            background-color: rgba(255, 255, 255, 0.02);
-        }
-
-        .signal-badge {
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        .sig-buy {
-            background: rgba(34, 197, 94, 0.2);
-            color: var(--success-color);
-        }
-
-        .sig-sell {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--danger-color);
-        }
-
-        .sig-wait {
-            background: rgba(234, 179, 8, 0.2);
-            color: var(--warning-color);
-        }
-
-        .trend-icon {
-            font-size: 1.2rem;
-        }
-    </style>
+    <title>Stockify Pro - Screener</title>
+    <link href="css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
-
     <div class="container">
         <header>
-            <h1>Stockify Pro 🔍</h1>
-            <div class="subtitle">AI-Powered Market Screener</div>
+            <h1 data-i18n="screener_title">Stock Screener 🔍</h1>
+            <div class="subtitle" data-i18n="screener_sub">Filter stocks based on technical signals</div>
         </header>
 
+
         <div class="nav-bar">
-            <a href="index.html" class="nav-link">📊 Analyzer</a>
-            <a href="screener.html" class="nav-link active">🔍 Screener</a>
-            <a href="portfolio.html" class="nav-link">💼 Portfolio</a>
+            <a href="index.html" class="nav-link" data-i18n="nav_analyzer">📊 Analyzer</a>
+            <a href="screener.html" class="nav-link active" data-i18n="nav_screener">🔍 Screener</a>
+            <a href="compare.html" class="nav-link" data-i18n="nav_compare">⚖️ Compare</a>
+            <a href="advanced.html" class="nav-link" data-i18n="nav_advanced">🧠 Advanced</a>
+            <a href="insider.html" class="nav-link" data-i18n="nav_insider">👔 Insider</a>
+            <a href="darkpool.html" class="nav-link" data-i18n="nav_darkpool">🌊 Dark Pool</a>
+            <a href="earnings.html" class="nav-link" data-i18n="nav_earnings">📅 Earnings</a>
+            <a href="calendar.html" class="nav-link" data-i18n="nav_calendar">📆 Calendar</a>
+            <a href="sectors.html" class="nav-link" data-i18n="nav_sectors">🔄 Sectors</a>
+            <a href="heatmap.html" class="nav-link" data-i18n="nav_heatmap">🗺️ Heatmap</a>
+            <a href="volatility.html" class="nav-link" data-i18n="nav_volatility">⚡ Volatility</a>
+            <a href="portfolio.html" class="nav-link" data-i18n="nav_portfolio">💼 Portfolio</a>
         </div>
 
         <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h3>Market Scanner (Major Tech & TH Bluechips)</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h3 style="margin: 0; font-family:var(--font-data);" data-i18n="scan_results">Market Scan Results</h3>
                 <button id="refresh-btn" class="btn-primary"
-                    style="width: auto; margin: 0; padding: 0.5rem 1.5rem; font-size: 1rem;">
-                    Refresh 🔄
+                    style="display:flex; align-items:center; gap:0.5rem; width:auto; margin:0;">
+                    <i class="fa-solid fa-rotate-right"></i> <span data-i18n="refresh">Refresh</span>
                 </button>
             </div>
 
             <div style="overflow-x: auto;">
-                <table class="screener-table">
+                <table>
                     <thead>
                         <tr>
-                            <th>Symbol</th>
-                            <th>Price</th>
-                            <th>Trend</th>
-                            <th>RSI</th>
-                            <th>Signal</th>
-                            <th>Action</th>
+                            <th data-i18n="col_symbol">Symbol</th>
+                            <th data-i18n="col_price">Price</th>
+                            <th data-i18n="col_trend">Trend</th>
+                            <th data-i18n="col_rsi">RSI</th>
+                            <th data-i18n="col_signal">Signal</th>
+                            <th data-i18n="col_action">Action</th>
                         </tr>
                     </thead>
                     <tbody id="screener-body">
-                        <tr>
-                            <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
-                                Click Refresh to Scan Market...
-                            </td>
-                        </tr>
+                        <!-- Filled by JS -->
                     </tbody>
                 </table>
+            </div>
+
+            <div id="loading" style="text-align: center; padding: 2rem; color: var(--text-secondary); display:none;">
+                <div class="loader"></div>
+                <p style="margin-top:1rem;">Scanning Market...</p>
             </div>
         </div>
     </div>
 
+    <script src="js/core/i18n.js"></script>
     <script>
         document.getElementById('refresh-btn').addEventListener('click', loadScreener);
 
+        // Lang Change Listener
+        window.addEventListener('langChange', () => {
+            loadScreener();
+        });
+
         async function loadScreener() {
             const tbody = document.getElementById('screener-body');
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Scanning Market... ⏳</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center;">${i18n.t('scan_loading')} ⏳</td></tr>`;
 
             try {
                 const res = await fetch('http://localhost:5000/screen');
@@ -162,19 +97,31 @@
                     if (stock.signal.includes('BUY')) sigClass = 'sig-buy';
                     if (stock.signal.includes('SELL')) sigClass = 'sig-sell';
 
+                    // Localize Signal (Strong Buy -> BUY -> ซื้อ)
+                    let sigText = stock.signal;
+                    if (stock.signal.includes('BUY')) sigText = i18n.t('sig_buy');
+                    else if (stock.signal.includes('SELL')) sigText = i18n.t('sig_sell');
+                    else if (stock.signal.includes('WAIT')) sigText = i18n.t('sig_wait');
+
+                    // Localize Trend
+                    let trendText = stock.trend;
+                    if (stock.trend === 'UP') trendText = i18n.t('trend_up');
+                    else if (stock.trend === 'DOWN') trendText = i18n.t('trend_down');
+                    else if (stock.trend === 'SIDEWAYS') trendText = i18n.t('trend_side');
+
                     const trendIcon = stock.trend === 'UP' ? '📈' : '📉';
                     const rsiColor = stock.rsi > 70 ? '#ef4444' : (stock.rsi < 30 ? '#22c55e' : '#94a3b8');
 
                     tr.innerHTML = `
-                        <td><strong>${stock.symbol}</strong></td>
+                         <td><strong>${stock.symbol}</strong></td>
                         <td>${stock.price.toFixed(2)}</td>
-                        <td><span class="trend-icon">${trendIcon}</span> ${stock.trend}</td>
+                        <td><span class="trend-icon">${trendIcon}</span> ${trendText}</td>
                         <td style="color: ${rsiColor}; font-weight: bold;">${stock.rsi.toFixed(1)}</td>
-                        <td><span class="signal-badge ${sigClass}">${stock.signal}</span></td>
+                        <td><span class="signal-badge ${sigClass}">${sigText}</span></td>
                         <td>
                             <a href="index.html" onclick="localStorage.setItem('targetStock', '${stock.symbol}')" 
                                style="color: var(--accent-color); text-decoration: none; font-weight: bold;">
-                               Analyze ➜
+                               ${i18n.t('btn_analyze')} ➜
                             </a>
                         </td>
                     `;
@@ -183,7 +130,7 @@
 
             } catch (err) {
                 console.error(err);
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: red;">Connection Failed</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: red;">${i18n.t('scan_connect_fail')}</td></tr>`;
             }
         }
 

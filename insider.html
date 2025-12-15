@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insider Trading | Stockify Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Outfit:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .insider-container {
+            padding: 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            padding: 2rem 1rem 1.5rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .search-box {
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(30, 41, 59, 0.8);
+            color: white;
+        }
+
+        .search-box button {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border: none;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .analysis-card {
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .analysis-card h3 {
+            margin: 0 0 1.5rem 0;
+            font-size: 1.3rem;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 0.3rem;
+        }
+
+        .cluster-alert {
+            background: rgba(251, 191, 36, 0.15);
+            border: 2px solid #fbbf24;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: #fde047;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        th {
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 500;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .badge {
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge.buy {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+
+        .badge.sell {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        #loading {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .stat-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">📈 Stockify Pro</a>
+        <div class="nav-links">
+            <a href="index.html" data-i18n="nav_analyzer">📊 Analyzer</a>
+            <a href="screener.html" data-i18n="nav_screener">🔍 Screener</a>
+            <a href="compare.html" data-i18n="nav_compare">⚖️ Compare</a>
+            <a href="advanced.html" data-i18n="nav_advanced">🧠 Advanced</a>
+            <a href="insider.html" class="active" data-i18n="nav_insider">👔 Insider</a>
+            <a href="darkpool.html" data-i18n="nav_darkpool">🌊 Dark Pool</a>
+            <a href="earnings.html" data-i18n="nav_earnings">📅 Earnings</a>
+            <a href="calendar.html" data-i18n="nav_calendar">📆 Calendar</a>
+            <a href="sectors.html" data-i18n="nav_sectors">🔄 Sectors</a>
+            <a href="heatmap.html" data-i18n="nav_heatmap">🗺️ Heatmap</a>
+            <a href="volatility.html" data-i18n="nav_volatility">⚡ Volatility</a>
+            <a href="portfolio.html" data-i18n="nav_portfolio">💼 Portfolio</a>
+        </div>
+    </nav>
+
+    <main class="insider-container">
+        <div class="page-header">
+            <h1 data-i18n="insider_title">👔 Insider Trading Tracker</h1>
+            <p data-i18n="insider_sub">Track executive buy/sell transactions</p>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="symbol-input" placeholder="Enter stock symbol (e.g. AAPL)" value="AAPL">
+            <button onclick="loadInsider()">Analyze</button>
+        </div>
+
+        <div id="loading">Loading insider data... ⏳</div>
+
+        <div id="results" style="display: none;">
+            <div class="analysis-card">
+                <h3>📊 Insider Sentiment Analysis</h3>
+
+                <div id="cluster-alert" style="display: none;" class="cluster-alert">
+                    ⚠️ CLUSTER DETECTED: Multiple insiders buying recently!
+                </div>
+
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <div class="stat-value" id="sentiment" style="color: #fbbf24;">-</div>
+                        <div class="stat-label">Sentiment</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="buys" style="color: #22c55e;">-</div>
+                        <div class="stat-label">Buys (10D)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="sells" style="color: #ef4444;">-</div>
+                        <div class="stat-label">Sells (10D)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="total" style="color: #a5b4fc;">-</div>
+                        <div class="stat-label">Total Trans.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="analysis-card">
+                <h3>📋 Recent Transactions</h3>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Insider</th>
+                                <th>Position</th>
+                                <th>Type</th>
+                                <th>Shares</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trans-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/core/i18n.js"></script>
+    <script>
+        async function loadInsider() {
+            const symbol = document.getElementById('symbol-input').value.trim().toUpperCase();
+            if (!symbol) return;
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+
+            try {
+                const response = await fetch(`http://localhost:5000/insider-tracker/${symbol}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('results').style.display = 'block';
+
+                // Analysis
+                const { analysis, transactions } = data;
+                document.getElementById('sentiment').textContent = analysis.sentiment;
+                document.getElementById('sentiment').style.color = analysis.sentiment_color;
+                document.getElementById('buys').textContent = analysis.buys_10d;
+                document.getElementById('sells').textContent = analysis.sells_10d;
+                document.getElementById('total').textContent = transactions.length;
+
+                // Cluster alert
+                document.getElementById('cluster-alert').style.display =
+                    analysis.cluster_detected ? 'block' : 'none';
+
+                // Transactions table
+                const tbody = document.getElementById('trans-tbody');
+                tbody.innerHTML = transactions.slice(0, 30).map(t => `
+                    <tr>
+                        <td>${t.date}</td>
+                        <td>${t.insider}</td>
+                        <td><small>${t.relation}</small></td>
+                        <td><span class="badge ${t.is_buy ? 'buy' : t.is_sell ? 'sell' : ''}">${t.transaction}</span></td>
+                        <td>${t.shares.toLocaleString()}</td>
+                        <td>$${(t.value / 1000).toFixed(0)}K</td>
+                    </tr>
+                `).join('') || '<tr><td colspan="6" style="text-align:center;color:rgba(255,255,255,0.5);">No transactions found</td></tr>';
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('loading').innerHTML = '<span style="color:#ef4444;">Error loading data</span>';
+            }
+        }
+
+        document.getElementById('symbol-input').addEventListener('keypress', e => {
+            if (e.key === 'Enter') loadInsider();
+        });
+
+        loadInsider();
+    </script>
+</body>
+
+</html>

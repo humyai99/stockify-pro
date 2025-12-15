@@ -1,6 +1,7 @@
-flask
-flask-cors
-yfinance
-pandas
-numpy
-requests
+Flask==3.0.0
+Flask-CORS==4.0.0
+yfinance==0.2.33
+pandas==2.1.4
+numpy==1.26.2
+requests==2.31.0
+gunicorn==21.2.0

@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earnings Calendar | Stockify Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Outfit:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .earnings-container {
+            padding: 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            padding: 2rem 1rem 1.5rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #22c55e, #10b981);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-header p {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .earnings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .earnings-card {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .earnings-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.25rem;
+        }
+
+        .stock-info h3 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .stock-info .name {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 0.25rem;
+        }
+
+        .stock-price {
+            text-align: right;
+        }
+
+        .stock-price .price {
+            font-size: 1.4rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            color: white;
+        }
+
+        .earnings-date {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.15));
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .earnings-date .label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .earnings-date .date {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #22c55e;
+            margin-top: 0.25rem;
+        }
+
+        .earnings-date.unknown {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .earnings-date.unknown .date {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 0.75rem;
+            text-align: center;
+        }
+
+        .stat-item .value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .stat-item .label {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 0.2rem;
+        }
+
+        .beat-rate {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .beat-rate.high {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+
+        .beat-rate.medium {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+        }
+
+        .beat-rate.low {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .history-section h4 {
+            margin: 0 0 0.75rem 0;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .history-items {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .history-item {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 0.6rem;
+            text-align: center;
+            font-size: 0.75rem;
+        }
+
+        .history-item .quarter {
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 0.3rem;
+        }
+
+        .history-item .result {
+            font-weight: 600;
+        }
+
+        .history-item .result.beat {
+            color: #22c55e;
+        }
+
+        .history-item .result.miss {
+            color: #ef4444;
+        }
+
+        .history-item .surprise {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 0.2rem;
+        }
+
+        #loading {
+            text-align: center;
+            padding: 5rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .earnings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-row {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">📈 Stockify Pro</a>
+        <div class="nav-links">
+            <a href="index.html" data-i18n="nav_analyzer">📊 Analyzer</a>
+            <a href="screener.html" data-i18n="nav_screener">🔍 Screener</a>
+            <a href="compare.html" data-i18n="nav_compare">⚖️ Compare</a>
+            <a href="advanced.html" data-i18n="nav_advanced">🧠 Advanced</a>
+            <a href="insider.html" data-i18n="nav_insider">👔 Insider</a>
+            <a href="darkpool.html" data-i18n="nav_darkpool">🌊 Dark Pool</a>
+            <a href="earnings.html" class="active" data-i18n="nav_earnings">📅 Earnings</a>
+            <a href="calendar.html" data-i18n="nav_calendar">📆 Calendar</a>
+            <a href="sectors.html" data-i18n="nav_sectors">🔄 Sectors</a>
+            <a href="heatmap.html" data-i18n="nav_heatmap">🗺️ Heatmap</a>
+            <a href="volatility.html" data-i18n="nav_volatility">⚡ Volatility</a>
+            <a href="portfolio.html" data-i18n="nav_portfolio">💼 Portfolio</a>
+        </div>
+    </nav>
+
+    <main class="earnings-container">
+        <div class="page-header">
+            <h1>📅 Earnings Calendar</h1>
+            <p>Track earnings announcements and historical performance</p>
+        </div>
+
+        <div id="loading">
+            <span>Loading earnings data... ⏳</span>
+        </div>
+
+        <div id="earnings-grid" class="earnings-grid" style="display: none;"></div>
+
+        <div style="text-align: center; padding: 1.5rem; color: rgba(255,255,255,0.4); font-size: 0.8rem;">
+            <span id="update-time">Last updated: -</span>
+        </div>
+    </main>
+
+    <script src="js/core/i18n.js"></script>
+    <script>
+        // i18n is already initialized globally
+
+        async function loadEarnings() {
+            try {
+                const res = await fetch('http://localhost:5000/earnings');
+                const data = await res.json();
+
+                if (data.error) {
+                    document.getElementById('loading').innerHTML = `<span style="color:#ef4444;">Error: ${data.error}</span>`;
+                    return;
+                }
+
+                document.getElementById('loading').style.display = 'none';
+                const grid = document.getElementById('earnings-grid');
+                grid.style.display = 'grid';
+                grid.innerHTML = '';
+
+                data.earnings.forEach(stock => {
+                    const card = document.createElement('div');
+                    card.className = 'earnings-card';
+
+                    // Determine beat rate class
+                    let beatClass = 'medium';
+                    if (stock.beat_rate >= 75) beatClass = 'high';
+                    else if (stock.beat_rate < 50) beatClass = 'low';
+
+                    // Format date
+                    const dateDisplay = stock.next_earnings || 'TBA';
+                    const dateClass = stock.next_earnings ? '' : 'unknown';
+
+                    // History items
+                    let historyHtml = '';
+                    if (stock.earnings_history && stock.earnings_history.length > 0) {
+                        historyHtml = stock.earnings_history.map(e => {
+                            const resultClass = e.beat ? 'beat' : 'miss';
+                            const resultText = e.beat ? '✓ Beat' : '✗ Miss';
+                            const surpriseText = e.surprise_pct ? `${e.surprise_pct > 0 ? '+' : ''}${e.surprise_pct}%` : '-';
+                            return `
+                                <div class="history-item">
+                                    <div class="quarter">${e.quarter.slice(5, 10)}</div>
+                                    <div class="result ${resultClass}">${resultText}</div>
+                                    <div class="surprise">${surpriseText}</div>
+                                </div>
+                            `;
+                        }).join('');
+                    } else {
+                        historyHtml = '<div style="color: rgba(255,255,255,0.4); text-align: center; width: 100%;">No history available</div>';
+                    }
+
+                    card.innerHTML = `
+                        <div class="card-header">
+                            <div class="stock-info">
+                                <h3>${stock.symbol}</h3>
+                                <div class="name">${stock.name}</div>
+                            </div>
+                            <div class="stock-price">
+                                <div class="price">$${stock.price}</div>
+                            </div>
+                        </div>
+
+                        <div class="earnings-date ${dateClass}">
+                            <div class="label">Next Earnings</div>
+                            <div class="date">${dateDisplay}</div>
+                        </div>
+
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <div class="value">${stock.eps_ttm ? stock.eps_ttm.toFixed(2) : '-'}</div>
+                                <div class="label">EPS (TTM)</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="value">${stock.eps_fwd ? stock.eps_fwd.toFixed(2) : '-'}</div>
+                                <div class="label">EPS (Fwd)</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="value">${stock.pe ? stock.pe.toFixed(1) : '-'}</div>
+                                <div class="label">P/E Ratio</div>
+                            </div>
+                        </div>
+
+                        <div class="beat-rate ${beatClass}">
+                            🎯 Beat Rate: ${stock.beat_rate}%
+                        </div>
+
+                        <div class="history-section" style="margin-top: 1rem;">
+                            <h4>📊 Recent Quarters</h4>
+                            <div class="history-items">
+                                ${historyHtml}
+                            </div>
+                        </div>
+                    `;
+
+                    grid.appendChild(card);
+                });
+
+                document.getElementById('update-time').textContent = `Last updated: ${new Date(data.updated).toLocaleString()}`;
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loading').innerHTML = `<span style="color:#ef4444;">Failed to load. Is the server running?</span>`;
+            }
+        }
+
+        loadEarnings();
+        setInterval(loadEarnings, 5 * 60 * 1000); // Refresh every 5 minutes
+    </script>
+</body>
+
+</html>

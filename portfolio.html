@@ -6,93 +6,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stockify Pro Portfolio 💼</title>
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        .portfolio-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding: 1rem;
-            background: rgba(59, 130, 246, 0.1);
-            border-radius: 12px;
-            border: 1px solid var(--accent-color);
-        }
-
-        .balance-lg {
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--success-color);
-        }
-
-        .pos-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .pos-table th,
-        .pos-table td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .pos-table th {
-            color: var(--text-secondary);
-        }
-
-        .profit-pos {
-            color: var(--success-color);
-            font-weight: bold;
-        }
-
-        .profit-neg {
-            color: var(--danger-color);
-            font-weight: bold;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
-
     <div class="container">
         <header>
-            <h1>Stockify Pro 💼</h1>
-            <div class="subtitle">Your Virtual Portfolio</div>
+            <h1 data-i18n="portfolio_title">Stockify Pro 💼</h1>
+            <div class="subtitle" data-i18n="portfolio_sub">Your Virtual Portfolio</div>
         </header>
 
-        <div class="nav-bar" style="display:flex; justify-content:center; gap:1rem; margin-bottom:2rem;">
-            <a href="index.html" class="nav-link">📊 Analyzer</a>
-            <a href="screener.html" class="nav-link">🔍 Screener</a>
-            <a href="portfolio.html" class="nav-link active">💼 Portfolio</a>
+        <div class="nav-bar">
+            <a href="index.html" class="nav-link" data-i18n="nav_analyzer">📊 Analyzer</a>
+            <a href="screener.html" class="nav-link" data-i18n="nav_screener">🔍 Screener</a>
+            <a href="compare.html" class="nav-link" data-i18n="nav_compare">⚖️ Compare</a>
+            <a href="advanced.html" class="nav-link" data-i18n="nav_advanced">🧠 Advanced</a>
+            <a href="insider.html" class="nav-link" data-i18n="nav_insider">👔 Insider</a>
+            <a href="darkpool.html" class="nav-link" data-i18n="nav_darkpool">🌊 Dark Pool</a>
+            <a href="earnings.html" class="nav-link" data-i18n="nav_earnings">📅 Earnings</a>
+            <a href="calendar.html" class="nav-link" data-i18n="nav_calendar">📆 Calendar</a>
+            <a href="sectors.html" class="nav-link" data-i18n="nav_sectors">🔄 Sectors</a>
+            <a href="heatmap.html" class="nav-link" data-i18n="nav_heatmap">🗺️ Heatmap</a>
+            <a href="volatility.html" class="nav-link" data-i18n="nav_volatility">⚡ Volatility</a>
+            <a href="portfolio.html" class="nav-link active" data-i18n="nav_portfolio">💼 Portfolio</a>
         </div>
 
         <div class="card">
-            <div class="portfolio-header">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; padding:1.5rem; background:rgba(0,0,0,0.2); border-radius:12px; border:1px solid var(--glass-border);">
                 <div>
-                    <h3 style="margin:0; color:var(--text-secondary);">Total Balance (Cash + Equity)</h3>
-                    <div id="total-equity" class="balance-lg">Calculating...</div>
+                    <h3 style="margin:0; color:var(--text-secondary); font-size:1rem; text-transform:uppercase;"
+                        data-i18n="total_balance">Total
+                        Balance (Cash + Equity)</h3>
+                    <div id="total-equity" class="price-display" style="font-size:2.5rem;">Calculating...</div>
                 </div>
                 <div style="text-align: right;">
-                    <div class="subtitle">Available Cash</div>
-                    <div id="cash-balance" style="font-size: 1.2rem; font-weight: bold;">0.00</div>
-                    <button onclick="resetPortfolio()"
-                        style="background:none; border:none; color:var(--danger-color); cursor:pointer; margin-top:0.5rem; text-decoration:underline;">Reset
-                        Portfolio ⚠️</button>
+                    <div class="subtitle" data-i18n="avail_cash">Available Cash</div>
+                    <div id="cash-balance"
+                        style="font-size: 1.5rem; font-weight: bold; font-family:var(--font-data); color:var(--success-color);">
+                        0.00</div>
+                    <button onclick="resetPortfolio()" class="btn-primary"
+                        style="background:transparent; border:1px solid var(--danger-color); color:var(--danger-color); font-size:0.8rem; padding:0.4rem 1rem; margin-top:1rem;">
+                        Reset Portfolio ⚠️
+                    </button>
                 </div>
             </div>
 
-            <h3>📊 Current Holdings</h3>
+            <h3 style="display:flex; align-items:center; gap:0.5rem;"><i class="fa-solid fa-chart-pie"></i> <span
+                    data-i18n="curr_holdings">Current
+                    Holdings</span></h3>
             <div style="overflow-x: auto;">
-                <table class="pos-table">
+                <table>
                     <thead>
                         <tr>
-                            <th>Symbol</th>
-                            <th>Qty</th>
-                            <th>Avg Price</th>
-                            <th>Current Price</th>
-                            <th>Value</th>
-                            <th>P/L</th>
-                            <th>Action</th>
+                            <th data-i18n="col_symbol">Symbol</th>
+                            <th data-i18n="col_qty">Qty</th>
+                            <th data-i18n="col_avg_price">Avg Price</th>
+                            <th data-i18n="col_price">Current Price</th>
+                            <th data-i18n="col_value">Value</th>
+                            <th data-i18n="col_pl">P/L</th>
+                            <th data-i18n="col_action">Action</th>
                         </tr>
                     </thead>
                     <tbody id="pos-body">
@@ -101,18 +74,19 @@
                 </table>
             </div>
 
-            <h3 style="margin-top: 2rem;">📜 Trade History</h3>
-            <div style="max-height: 200px; overflow-y: auto;">
-                <table class="pos-table" style="font-size: 0.9rem;">
+            <h3 style="margin-top: 3rem; display:flex; align-items:center; gap:0.5rem;"><i
+                    class="fa-solid fa-clock-rotate-left"></i> <span data-i18n="trade_history">Trade History</span></h3>
+            <div style="max-height: 300px; overflow-y: auto; border:1px solid var(--glass-border); border-radius:8px;">
+                <table style="margin-top:0;">
                     <tbody id="hist-body">
                         <!-- History here -->
                     </tbody>
                 </table>
             </div>
-
         </div>
     </div>
 
+    <script src="js/core/i18n.js"></script>
     <script src="js/core/portfolio.js"></script>
     <script>
         const pm = new PortfolioManager();
@@ -128,26 +102,34 @@
             histBody.innerHTML = '';
             const history = pm.data.history || [];
             if (history.length === 0) {
-                histBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No trade history</td></tr>';
+                histBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:1rem; color:var(--text-secondary);">${i18n.t('no_history')}</td></tr>`;
             } else {
                 history.slice(0, 10).forEach(h => {
-                    const plClass = h.profit >= 0 ? 'profit-pos' : 'profit-neg';
+                    const plClass = h.profit >= 0 ? 'text-up' : 'text-down';
+                    const plSign = h.profit > 0 ? '+' : '';
                     const row = document.createElement('tr');
+
+                    // Icon based on action
+                    // Icon based on action
+                    const actionLabel = h.action === 'BUY' ? i18n.t('btn_buy') : i18n.t('btn_sell');
+                    const icon = h.action === 'BUY' ? `<span style="color:var(--success-color);"><i class="fa-solid fa-arrow-down"></i> ${actionLabel}</span>`
+                        : `<span style="color:var(--danger-color);"><i class="fa-solid fa-arrow-up"></i> ${actionLabel}</span>`;
+
                     row.innerHTML = `
-                        <td>${h.action} <strong>${h.symbol}</strong></td>
+                        <td style="font-weight:600;">${icon} <strong>${h.symbol}</strong></td>
                         <td>${h.qty} @ ${h.price.toFixed(2)}</td>
-                        <td class="${plClass}">${h.profit > 0 ? '+' : ''}${h.profit.toFixed(2)}</td>
-                        <td style="color:var(--text-secondary);">${new Date(h.date).toLocaleDateString()}</td>
+                        <td><span class="${plClass}" style="padding:2px 6px; border-radius:4px; font-weight:700;">${plSign}${h.profit.toFixed(2)}</span></td>
+                        <td style="color:var(--text-secondary); font-size:0.85rem;">${new Date(h.date).toLocaleDateString()} ${new Date(h.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                      `;
                     histBody.appendChild(row);
                 });
             }
 
             // 2. Render Positions with Real-time Prices
-            posBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Fetching Live Prices... ⏳</td></tr>';
+            posBody.innerHTML = `<tr><td colspan="7" style="text-align:center;">${i18n.t('fetching_prices')}</td></tr>`;
 
             if (data.positions.length === 0) {
-                posBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No open positions. Go to Analyzer to buy stocks! 🚀</td></tr>';
+                posBody.innerHTML = `<tr><td colspan="7" style="text-align:center;">${i18n.t('no_positions')}</td></tr>`;
                 document.getElementById('total-equity').textContent = data.balance.toLocaleString(undefined, { minimumFractionDigits: 2 });
                 return;
             }
@@ -176,24 +158,27 @@
                 const marketValue = currentPrice * pos.qty;
                 const pl = marketValue - (pos.avgPrice * pos.qty);
                 const plPct = (pl / (pos.avgPrice * pos.qty)) * 100;
-                const plClass = pl >= 0 ? 'profit-pos' : 'profit-neg';
+                const plClass = pl >= 0 ? 'text-up' : 'text-down';
+                const plSign = pl >= 0 ? '+' : '';
 
                 totalValue += marketValue;
 
                 htmlChunks.push(`
                     <tr>
-                        <td><strong>${pos.symbol}</strong></td>
+                        <td style="font-weight:700;">${pos.symbol}</td>
                         <td>${pos.qty}</td>
                         <td>${pos.avgPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                         <td>${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                        <td>${marketValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                        <td class="${plClass}">
-                            ${pl > 0 ? '+' : ''}${pl.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                            <br><small>(${plPct.toFixed(2)}%)</small>
+                        <td style="font-weight:600;">${marketValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                        <td>
+                            <span class="${plClass}" style="border-radius:6px; padding:4px 8px; font-weight:700; font-size:0.9rem;">
+                                ${plSign}${pl.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </span>
+                            <div style="font-size:0.8rem; margin-top:4px; opacity:0.8;">(${plSign}${plPct.toFixed(2)}%)</div>
                         </td>
                         <td>
                             <a href="index.html" onclick="localStorage.setItem('targetStock', '${pos.symbol}')" 
-                               class="btn-primary" style="padding:0.25rem 0.5rem; font-size:0.8rem; text-decoration:none;">Trade</a>
+                               class="btn-primary" style="padding:0.4rem 0.8rem; font-size:0.8rem; text-decoration:none; background:var(--accent-color);">${i18n.t('btn_analyze')}</a>
                         </td>
                     </tr>
                 `);
@@ -211,6 +196,11 @@
                 loadPortfolio();
             }
         };
+
+        // Lang Change Listener
+        window.addEventListener('langChange', () => {
+            loadPortfolio();
+        });
 
         // Auto load
         loadPortfolio();

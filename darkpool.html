@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Pool Tracker | Stockify Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Outfit:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .darkpool-container {
+            padding: 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            padding: 2rem 1rem 1.5rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-card {
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-card p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+        }
+
+        .analysis-card {
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 2rem;
+        }
+
+        .analysis-card h3 {
+            margin: 0 0 1.5rem 0;
+            font-size: 1.3rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        th {
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 500;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        td {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .ratio-badge {
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .ratio-high {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+
+        .ratio-medium {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fde047;
+        }
+
+        .change-positive {
+            color: #22c55e;
+        }
+
+        .change-negative {
+            color: #ef4444;
+        }
+
+        .refresh-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            margin-bottom: 1.5rem;
+        }
+
+        #loading {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            table {
+                font-size: 0.85rem;
+            }
+
+            th,
+            td {
+                padding: 0.75rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">📈 Stockify Pro</a>
+        <div class="nav-links">
+            <a href="index.html" data-i18n="nav_analyzer">📊 Analyzer</a>
+            <a href="screener.html" data-i18n="nav_screener">🔍 Screener</a>
+            <a href="compare.html" data-i18n="nav_compare">⚖️ Compare</a>
+            <a href="advanced.html" data-i18n="nav_advanced">🧠 Advanced</a>
+            <a href="insider.html" data-i18n="nav_insider">👔 Insider</a>
+            <a href="darkpool.html" class="active" data-i18n="nav_darkpool">🌊 Dark Pool</a>
+            <a href="earnings.html" data-i18n="nav_earnings">📅 Earnings</a>
+            <a href="calendar.html" data-i18n="nav_calendar">📆 Calendar</a>
+            <a href="sectors.html" data-i18n="nav_sectors">🔄 Sectors</a>
+            <a href="heatmap.html" data-i18n="nav_heatmap">🗺️ Heatmap</a>
+            <a href="volatility.html" data-i18n="nav_volatility">⚡ Volatility</a>
+            <a href="portfolio.html" data-i18n="nav_portfolio">💼 Portfolio</a>
+        </div>
+    </nav>
+
+    <main class="darkpool-container">
+        <div class="page-header">
+            <h1 data-i18n="darkpool_title">🌊 Dark Pool & Block Trades</h1>
+            <p data-i18n="darkpool_sub">Unusual Volume Detection</p>
+        </div>
+
+        <div class="info-card">
+            <p><strong>ℹ️ What is this?</strong> This tracker detects <strong>unusual volume</strong> - when a stock's
+                trading volume is significantly higher than its average. This can indicate institutional accumulation
+                (dark pool activity) or major news events. Volume 1.5x+ above average is flagged.</p>
+        </div>
+
+        <button class="refresh-btn" onclick="loadDarkpool()">
+            🔄 Refresh Data
+        </button>
+
+        <div id="loading">Scanning for unusual volume... ⏳</div>
+
+        <div id="results" style="display: none;">
+            <div class="analysis-card">
+                <h3>📊 Unusual Volume Alerts</h3>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Symbol</th>
+                                <th>Date</th>
+                                <th>Volume</th>
+                                <th>Avg Volume</th>
+                                <th>Ratio</th>
+                                <th>Price</th>
+                                <th>Change %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="volume-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/core/i18n.js"></script>
+    <script>
+        async function loadDarkpool() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+
+            try {
+                const response = await fetch('http://localhost:5000/darkpool');
+                const data = await response.json();
+
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('results').style.display = 'block';
+
+                const tbody = document.getElementById('volume-tbody');
+
+                if (!data.unusual_volume || data.unusual_volume.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:rgba(255,255,255,0.5);padding:2rem;">No unusual volume detected today</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.unusual_volume.map(item => {
+                    const ratioClass = item.ratio >= 3 ? 'ratio-high' : 'ratio-medium';
+                    const changeClass = item.change_pct > 0 ? 'change-positive' : 'change-negative';
+                    const changeSign = item.change_pct > 0 ? '+' : '';
+
+                    return `
+                        <tr>
+                            <td><strong>${item.symbol}</strong></td>
+                            <td>${item.date}</td>
+                            <td>${(item.volume / 1000000).toFixed(1)}M</td>
+                            <td>${(item.avg_volume / 1000000).toFixed(1)}M</td>
+                            <td><span class="ratio-badge ${ratioClass}">${item.ratio}x</span></td>
+                            <td>$${item.price}</td>
+                            <td class="${changeClass}">${changeSign}${item.change_pct}%</td>
+                        </tr>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('loading').innerHTML = '<span style="color:#ef4444;">Error loading data</span>';
+            }
+        }
+
+        // Auto-load on page load
+        loadDarkpool();
+    </script>
+</body>
+
+</html>

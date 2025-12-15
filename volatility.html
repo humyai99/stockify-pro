@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volatility Dashboard | Stockify Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Outfit:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .vol-container {
+            padding: 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .vix-hero {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
+            border-radius: 24px;
+            padding: 3rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .vix-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(139, 92, 246, 0.15), transparent 50%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 0.5;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+        }
+
+        .vix-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+
+        .vix-value {
+            font-size: 6rem;
+            font-weight: 700;
+            line-height: 1;
+            margin: 0.5rem 0;
+            font-family: 'Outfit', sans-serif;
+            position: relative;
+        }
+
+        .vix-status {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .vix-change {
+            font-size: 1.1rem;
+            padding: 0.6rem 1.5rem;
+            border-radius: 25px;
+            display: inline-block;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .vix-range {
+            display: flex;
+            justify-content: center;
+            gap: 4rem;
+            margin-top: 2rem;
+            color: rgba(255, 255, 255, 0.7);
+            position: relative;
+        }
+
+        .vix-range-item {
+            text-align: center;
+        }
+
+        .vix-range-value {
+            font-size: 1.8rem;
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .dash-card {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 1.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .dash-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        .dash-card h3 {
+            margin: 0 0 1.25rem 0;
+            color: white;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .fear-meter {
+            height: 14px;
+            background: linear-gradient(90deg, #22c55e 0%, #84cc16 25%, #fbbf24 50%, #f97316 75%, #ef4444 100%);
+            border-radius: 7px;
+            position: relative;
+            margin: 2rem 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .fear-pointer {
+            position: absolute;
+            top: -10px;
+            width: 6px;
+            height: 34px;
+            background: white;
+            border-radius: 3px;
+            transform: translateX(-50%);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            transition: left 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .fear-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 0.75rem;
+        }
+
+        .atr-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .atr-table th,
+        .atr-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .atr-table th {
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 500;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .atr-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .atr-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .atr-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #8b5cf6, #ec4899);
+            border-radius: 4px;
+            transition: width 0.6s ease;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 1.25rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-box:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .stat-box-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .stat-box-label {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .market-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        #loading {
+            text-align: center;
+            padding: 5rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            padding: 2rem 1rem 1rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #f97316, #ef4444);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-header p {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .vix-value {
+                font-size: 4rem;
+            }
+
+            .vix-range {
+                gap: 2rem;
+            }
+
+            .market-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">📈 Stockify Pro</a>
+        <div class="nav-links">
+            <a href="index.html" data-i18n="nav_analyzer">📊 Analyzer</a>
+            <a href="screener.html" data-i18n="nav_screener">🔍 Screener</a>
+            <a href="compare.html" data-i18n="nav_compare">⚖️ Compare</a>
+            <a href="advanced.html" data-i18n="nav_advanced">🧠 Advanced</a>
+            <a href="insider.html" data-i18n="nav_insider">👔 Insider</a>
+            <a href="darkpool.html" data-i18n="nav_darkpool">🌊 Dark Pool</a>
+            <a href="earnings.html" data-i18n="nav_earnings">📅 Earnings</a>
+            <a href="calendar.html" data-i18n="nav_calendar">📆 Calendar</a>
+            <a href="sectors.html" data-i18n="nav_sectors">🔄 Sectors</a>
+            <a href="heatmap.html" data-i18n="nav_heatmap">🗺️ Heatmap</a>
+            <a href="volatility.html" class="active" data-i18n="nav_volatility">⚡ Volatility</a>
+            <a href="portfolio.html" data-i18n="nav_portfolio">💼 Portfolio</a>
+        </div>
+    </nav>
+
+    <main class="vol-container">
+        <div class="page-header">
+            <h1 data-i18n="vol_title">⚡ Volatility Dashboard</h1>
+            <p data-i18n="vol_sub">Market Fear & Volatility Metrics</p>
+        </div>
+
+        <div id="loading">
+            <span data-i18n="loading">Loading volatility data... ⏳</span>
+        </div>
+
+        <div id="content" style="display: none;">
+            <!-- VIX Hero Section -->
+            <div class="vix-hero">
+                <div class="vix-label" data-i18n="vol_vix">CBOE Volatility Index (VIX)</div>
+                <div class="vix-value" id="vix-value">--</div>
+                <div class="vix-status" id="vix-status">Loading...</div>
+                <div class="vix-change" id="vix-change">-</div>
+                <div class="vix-range">
+                    <div class="vix-range-item">
+                        <div class="vix-range-value" id="vix-low">--</div>
+                        <div>30D Low</div>
+                    </div>
+                    <div class="vix-range-item">
+                        <div class="vix-range-value" id="vix-high">--</div>
+                        <div>30D High</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Fear & Greed Meter -->
+                <div class="dash-card">
+                    <h3>😱 <span data-i18n="vol_fear_meter">Fear & Greed Meter</span></h3>
+                    <div class="fear-meter">
+                        <div class="fear-pointer" id="fear-pointer" style="left: 50%;"></div>
+                    </div>
+                    <div class="fear-labels">
+                        <span data-i18n="vol_extreme_greed">Extreme Greed</span>
+                        <span data-i18n="vol_neutral">Neutral</span>
+                        <span data-i18n="vol_extreme_fear">Extreme Fear</span>
+                    </div>
+                    <div class="stat-box" style="margin-top: 1.5rem;">
+                        <div class="stat-box-value" id="fear-score">--</div>
+                        <div class="stat-box-label" data-i18n="vol_fear_score">Fear Score (based on VIX)</div>
+                    </div>
+                </div>
+
+                <!-- Market Overview -->
+                <div class="dash-card">
+                    <h3>📊 <span data-i18n="vol_market_overview">Market Overview</span></h3>
+                    <div class="market-stats">
+                        <div class="stat-box">
+                            <div class="stat-box-value" id="spy-price">--</div>
+                            <div class="stat-box-label" data-i18n="vol_spy_price">SPY Price</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-box-value" id="hist-vol">--</div>
+                            <div class="stat-box-label" data-i18n="vol_hist_vol">Historical Vol (20D)</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-box-value" id="market-trend">--</div>
+                            <div class="stat-box-label" data-i18n="vol_market_trend">Market Trend</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-box-value" id="pcr">--</div>
+                            <div class="stat-box-label" data-i18n="vol_pcr">P/C Ratio (Proxy)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ATR Rankings -->
+                <div class="dash-card" style="grid-column: 1 / -1;">
+                    <h3>🔥 <span data-i18n="vol_atr_ranking">Most Volatile Stocks (ATR Ranking)</span></h3>
+                    <table class="atr-table">
+                        <thead>
+                            <tr>
+                                <th data-i18n="col_symbol">Symbol</th>
+                                <th data-i18n="col_price">Price</th>
+                                <th data-i18n="vol_atr">ATR ($)</th>
+                                <th data-i18n="vol_atr_pct">ATR %</th>
+                                <th data-i18n="vol_daily_range">Daily Range</th>
+                                <th>Volatility</th>
+                            </tr>
+                        </thead>
+                        <tbody id="atr-body">
+                            <!-- JS Populated -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style="text-align: center; padding: 1.5rem; color: rgba(255,255,255,0.4); font-size: 0.8rem;">
+                <span id="update-time">Last updated: -</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- Language Switcher -->
+    <div id="lang-switcher"></div>
+
+    <script src="js/core/i18n.js"></script>
+    <script>
+        // i18n is already initialized globally by i18n.js
+
+        async function loadVolatility() {
+            try {
+                const res = await fetch('http://localhost:5000/volatility');
+                const data = await res.json();
+
+                if (data.error) {
+                    document.getElementById('loading').innerHTML = `<span style="color:#ef4444;">Error: ${data.error}</span>`;
+                    return;
+                }
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+
+                // VIX Section
+                const vix = data.vix;
+                document.getElementById('vix-value').textContent = vix.current;
+                document.getElementById('vix-value').style.color = vix.color;
+                document.getElementById('vix-value').style.textShadow = `0 0 30px ${vix.color}50`;
+
+                // Translate status
+                let statusText = vix.status;
+                if (vix.status === 'EXTREME GREED') statusText = i18n.t('vol_extreme_greed');
+                else if (vix.status === 'LOW FEAR') statusText = i18n.t('vol_low_fear');
+                else if (vix.status === 'NEUTRAL') statusText = i18n.t('vol_neutral');
+                else if (vix.status === 'ELEVATED FEAR') statusText = i18n.t('vol_elevated_fear');
+                else if (vix.status === 'EXTREME FEAR') statusText = i18n.t('vol_extreme_fear');
+
+                document.getElementById('vix-status').textContent = statusText;
+                document.getElementById('vix-status').style.color = vix.color;
+
+                const changeEl = document.getElementById('vix-change');
+                const sign = vix.change >= 0 ? '+' : '';
+                changeEl.textContent = `${sign}${vix.change.toFixed(2)}% Today`;
+                changeEl.style.background = vix.change >= 0 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.2)';
+                changeEl.style.color = vix.change >= 0 ? '#ef4444' : '#22c55e';
+
+                document.getElementById('vix-low').textContent = vix.low_30d;
+                document.getElementById('vix-high').textContent = vix.high_30d;
+
+                // Fear Meter (VIX 10-40 range mapped to 0-100%)
+                const fearPct = Math.min(Math.max((vix.current - 10) / 30 * 100, 0), 100);
+                document.getElementById('fear-pointer').style.left = `${fearPct}%`;
+                document.getElementById('fear-score').textContent = Math.round(fearPct);
+                document.getElementById('fear-score').style.color = vix.color;
+
+                // Market Stats
+                const market = data.market;
+                document.getElementById('spy-price').textContent = `$${market.spy_price}`;
+                document.getElementById('hist-vol').textContent = `${market.hist_volatility}%`;
+                document.getElementById('hist-vol').style.color = market.hist_volatility > 20 ? '#f97316' : '#22c55e';
+
+                const trendEl = document.getElementById('market-trend');
+                trendEl.textContent = market.trend;
+                trendEl.style.color = market.trend === 'BULLISH' ? '#22c55e' : (market.trend === 'BEARISH' ? '#ef4444' : '#fbbf24');
+
+                document.getElementById('pcr').textContent = market.pcr;
+                document.getElementById('pcr').style.color = market.pcr > 1 ? '#ef4444' : '#22c55e';
+
+                // ATR Table
+                const tbody = document.getElementById('atr-body');
+                tbody.innerHTML = '';
+
+                const maxAtr = Math.max(...data.atr_rankings.map(a => a.atr_pct));
+
+                data.atr_rankings.forEach((stock, i) => {
+                    const barWidth = (stock.atr_pct / maxAtr) * 100;
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="font-weight: 600; color: white;">${stock.symbol}</td>
+                        <td style="font-family: 'Outfit', sans-serif;">$${stock.price}</td>
+                        <td style="font-family: 'Outfit', sans-serif;">$${stock.atr}</td>
+                        <td style="color: ${stock.atr_pct > 5 ? '#ef4444' : '#fbbf24'}; font-weight: 600; font-family: 'Outfit', sans-serif;">${stock.atr_pct}%</td>
+                        <td style="font-family: 'Outfit', sans-serif;">${stock.daily_range}%</td>
+                        <td style="width: 150px;">
+                            <div class="atr-bar">
+                                <div class="atr-fill" style="width: ${barWidth}%;"></div>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                // Update time
+                document.getElementById('update-time').textContent = `Last updated: ${new Date(data.updated).toLocaleString()}`;
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loading').innerHTML = `<span style="color:#ef4444;">Failed to load. Is the server running?</span>`;
+            }
+        }
+
+        loadVolatility();
+
+        // Re-render on language change
+        window.addEventListener('langChange', () => {
+            i18n.updatePage();
+            loadVolatility();
+        });
+
+        setInterval(loadVolatility, 60000); // Refresh every minute
+    </script>
+</body>
+
+</html>

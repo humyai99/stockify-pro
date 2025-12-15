@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Comparison | Stockify Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Outfit:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .compare-container {
+            padding: 1rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            padding: 2rem 1rem 1.5rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .stock-selector {
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .symbol-input-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .symbol-chip {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .symbol-chip .remove {
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .symbol-chip .remove:hover {
+            opacity: 1;
+        }
+
+        .add-symbol-box {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .add-symbol-box input {
+            flex: 1;
+            max-width: 200px;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 23, 42, 0.8);
+            color: white;
+        }
+
+        .add-symbol-box button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .comparison-card {
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .comparison-card h3 {
+            margin: 0 0 1.5rem 0;
+            font-size: 1.3rem;
+        }
+
+        .comparison-table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table.comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        table.comparison-table thead {
+            background: rgba(15, 23, 42, 0.8);
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        table.comparison-table th,
+        table.comparison-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        table.comparison-table th {
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        table.comparison-table th:first-child {
+            position: sticky;
+            left: 0;
+            background: rgba(15, 23, 42, 0.95);
+            z-index: 2;
+        }
+
+        table.comparison-table td:first-child {
+            position: sticky;
+            left: 0;
+            background: rgba(30, 41, 59, 0.95);
+            font-weight: 500;
+            z-index: 1;
+        }
+
+        table.comparison-table td {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .best-value {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .worst-value {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .chart-container {
+            height: 400px;
+            margin-top: 2rem;
+        }
+
+        .category-header {
+            background: rgba(99, 102, 241, 0.1);
+            font-weight: 600;
+            color: #a5b4fc;
+        }
+
+        #loading {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .comparison-card {
+                padding: 1rem;
+            }
+
+            table.comparison-table th,
+            table.comparison-table td {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.85rem;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">📈 Stockify Pro</a>
+        <div class="nav-links">
+            <a href="index.html" data-i18n="nav_analyzer">📊 Analyzer</a>
+            <a href="screener.html" data-i18n="nav_screener">🔍 Screener</a>
+            <a href="compare.html" class="active" data-i18n="nav_compare">⚖️ Compare</a>
+            <a href="advanced.html" data-i18n="nav_advanced">🧠 Advanced</a>
+            <a href="insider.html" data-i18n="nav_insider">👔 Insider</a>
+            <a href="darkpool.html" data-i18n="nav_darkpool">🌊 Dark Pool</a>
+            <a href="earnings.html" data-i18n="nav_earnings">📅 Earnings</a>
+            <a href="calendar.html" data-i18n="nav_calendar">📆 Calendar</a>
+            <a href="sectors.html" data-i18n="nav_sectors">🔄 Sectors</a>
+            <a href="heatmap.html" data-i18n="nav_heatmap">🗺️ Heatmap</a>
+            <a href="volatility.html" data-i18n="nav_volatility">⚡ Volatility</a>
+            <a href="portfolio.html" data-i18n="nav_portfolio">💼 Portfolio</a>
+        </div>
+    </nav>
+
+    <main class="compare-container">
+        <div class="page-header">
+            <h1 data-i18n="compare_title">⚖️ Stock Comparison Tool</h1>
+            <p data-i18n="compare_sub">Compare up to 5 stocks side-by-side</p>
+        </div>
+
+        <div class="stock-selector">
+            <h3 data-i18n="compare_selected">Selected Stocks</h3>
+            <div class="symbol-input-group" id="symbol-chips"></div>
+
+            <div class="add-symbol-box">
+                <input type="text" id="new-symbol" placeholder="Add stock symbol (e.g. AAPL)" maxlength="10">
+                <button onclick="addSymbol()" data-i18n="compare_add">Add Stock</button>
+                <button onclick="compareStocks()" style="background: linear-gradient(135deg, #10b981, #059669);"
+                    data-i18n="compare_compare">Compare</button>
+            </div>
+        </div>
+
+        <div id="loading">Loading comparison... ⏳</div>
+
+        <div id="results" style="display: none;">
+            <!-- Performance Chart -->
+            <div class="comparison-card">
+                <h3 data-i18n="compare_chart">📈 Performance Comparison (90 Days)</h3>
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Comparison Table -->
+            <div class="comparison-card">
+                <h3 data-i18n="compare_table">📊 Detailed Comparison</h3>
+                <div class="comparison-table-container">
+                    <table class="comparison-table" id="comparison-table">
+                        <thead>
+                            <tr>
+                                <th data-i18n="compare_metric">Metric</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparison-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/core/i18n.js"></script>
+    <script>
+        let selectedSymbols = ['AAPL', 'MSFT', 'GOOGL'];
+        let comparisonData = null;
+        let chart = null;
+
+        // Render symbol chips
+        function renderSymbols() {
+            const container = document.getElementById('symbol-chips');
+            container.innerHTML = selectedSymbols.map(sym => `
+                <div class="symbol-chip">
+                    <span>${sym}</span>
+                    <span class="remove" onclick="removeSymbol('${sym}')">✕</span>
+                </div>
+            `).join('');
+        }
+
+        function addSymbol() {
+            const input = document.getElementById('new-symbol');
+            const symbol = input.value.trim().toUpperCase();
+
+            if (!symbol) return;
+
+            if (selectedSymbols.length >= 5) {
+                alert('Maximum 5 stocks allowed');
+                return;
+            }
+
+            if (selectedSymbols.includes(symbol)) {
+                alert('Symbol already added');
+                return;
+            }
+
+            selectedSymbols.push(symbol);
+            input.value = '';
+            renderSymbols();
+        }
+
+        function removeSymbol(symbol) {
+            selectedSymbols = selectedSymbols.filter(s => s !== symbol);
+            renderSymbols();
+        }
+
+        async function compareStocks() {
+            if (selectedSymbols.length < 2) {
+                alert('Please select at least 2 stocks');
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+
+            try {
+                const response = await fetch('http://localhost:5000/compare', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ symbols: selectedSymbols })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+
+                comparisonData = data.stocks;
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('results').style.display = 'block';
+
+                renderTable();
+                renderChart();
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('loading').innerHTML = '<span style="color:#ef4444;">Error loading comparison</span>';
+            }
+        }
+
+        function renderTable() {
+            const table = document.getElementById('comparison-table');
+            const thead = table.querySelector('thead tr');
+            const tbody = document.getElementById('comparison-tbody');
+
+            // Headers
+            thead.innerHTML = '<th data-i18n="compare_metric">Metric</th>' +
+                comparisonData.map(stock => `<th>${stock.symbol}<br><small style="opacity:0.7;">${stock.name || ''}</small></th>`).join('');
+
+            // Metrics
+            const metrics = [
+                { label: 'Price', key: 'price', format: v => v ? '$' + v : 'N/A', category: 'price' },
+
+                { label: '--- Valuation ---', category: 'header' },
+                { label: 'P/E Ratio', key: 'pe', format: v => v || 'N/A', lowerBetter: true },
+                { label: 'P/B Ratio', key: 'pb', format: v => v || 'N/A', lowerBetter: true },
+                { label: 'PEG Ratio', key: 'peg', format: v => v || 'N/A', lowerBetter: true },
+                { label: 'P/S Ratio', key: 'ps', format: v => v || 'N/A', lowerBetter: true },
+
+                { label: '--- Profitability ---', category: 'header' },
+                { label: 'ROE (%)', key: 'roe', format: v => v ? v + '%' : 'N/A' },
+                { label: 'ROA (%)', key: 'roa', format: v => v ? v + '%' : 'N/A' },
+                { label: 'Profit Margin (%)', key: 'profit_margin', format: v => v ? v + '%' : 'N/A' },
+
+                { label: '--- Growth ---', category: 'header' },
+                { label: 'Revenue Growth (%)', key: 'revenue_growth', format: v => v ? v + '%' : 'N/A' },
+                { label: 'Earnings Growth (%)', key: 'earnings_growth', format: v => v ? v + '%' : 'N/A' },
+
+                { label: '--- Dividend ---', category: 'header' },
+                { label: 'Dividend Yield (%)', key: 'dividend_yield', format: v => v ? v + '%' : 'N/A' },
+                { label: 'Payout Ratio (%)', key: 'payout_ratio', format: v => v ? v + '%' : 'N/A' },
+
+                { label: '--- Financial Health ---', category: 'header' },
+                { label: 'Market Cap', key: 'market_cap', format: v => v ? '$' + (v / 1e9).toFixed(2) + 'B' : 'N/A' },
+                { label: 'Debt/Equity', key: 'debt_to_equity', format: v => v || 'N/A', lowerBetter: true },
+                { label: 'Current Ratio', key: 'current_ratio', format: v => v || 'N/A' },
+
+                { label: '--- Performance ---', category: 'header' },
+                { label: 'YTD Return (%)', key: 'ytd_return', format: v => v ? (v > 0 ? '+' : '') + v + '%' : 'N/A' },
+                { label: '1Y Return (%)', key: 'one_year_return', format: v => v ? (v > 0 ? '+' : '') + v + '%' : 'N/A' },
+
+                { label: '--- Technical ---', category: 'header' },
+                { label: 'Volatility (%)', key: 'volatility', format: v => v ? v + '%' : 'N/A', lowerBetter: true },
+                { label: 'Beta', key: 'beta', format: v => v || 'N/A' },
+                { label: 'RSI', key: 'rsi', format: v => v || 'N/A' },
+
+                { label: '--- Analyst ---', category: 'header' },
+                { label: 'Recommendation', key: 'recommendation', format: v => v || 'N/A' },
+                { label: 'Target Price', key: 'target_price', format: v => v ? '$' + v : 'N/A' }
+            ];
+
+            tbody.innerHTML = metrics.map(metric => {
+                if (metric.category === 'header') {
+                    return `<tr class="category-header"><td colspan="${comparisonData.length + 1}">${metric.label}</td></tr>`;
+                }
+
+                const values = comparisonData.map(stock => stock[metric.key]);
+                const numValues = values.filter(v => v !== null && v !== undefined && v !== 'N/A');
+
+                let bestIdx = null, worstIdx = null;
+                if (numValues.length > 0 && metric.key !== 'recommendation') {
+                    const sortedVals = [...numValues].sort((a, b) => metric.lowerBetter ? a - b : b - a);
+                    const bestVal = sortedVals[0];
+                    const worstVal = sortedVals[sortedVals.length - 1];
+                    bestIdx = values.indexOf(bestVal);
+                    worstIdx = values.indexOf(worstVal);
+                }
+
+                return `
+                    <tr>
+                        <td>${metric.label}</td>
+                        ${comparisonData.map((stock, idx) => {
+                    const val = stock[metric.key];
+                    const formatted = metric.format(val);
+                    const isBest = idx === bestIdx && numValues.length > 1;
+                    const isWorst = idx === worstIdx && numValues.length > 1;
+                    const className = isBest ? 'best-value' : isWorst ? 'worst-value' : '';
+                    return `<td><span class="${className}">${formatted}</span></td>`;
+                }).join('')}
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderChart() {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+
+            if (chart) chart.destroy();
+
+            // Normalize to start at 100
+            const datasets = comparisonData.filter(stock => stock.history && stock.history.length > 0).map((stock, idx) => {
+                const prices = stock.history.map(h => h.price);
+                const basePrice = prices[0];
+                const normalized = prices.map(p => (p / basePrice) * 100);
+
+                const colors = ['#6366f1', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444'];
+
+                return {
+                    label: stock.symbol,
+                    data: normalized,
+                    borderColor: colors[idx],
+                    backgroundColor: colors[idx] + '20',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: false
+                };
+            });
+
+            const labels = comparisonData[0]?.history.map(h => h.date) || [];
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            title: { display: true, text: 'Indexed Performance (Base=100)' },
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: 'rgba(255,255,255,0.7)' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: 'rgba(255,255,255,0.7)', maxTicksLimit: 10 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initial render
+        renderSymbols();
+
+        // Auto-compare on load
+        setTimeout(() => compareStocks(), 500);
+
+        // Enter key support
+        document.getElementById('new-symbol').addEventListener('keypress', e => {
+            if (e.key === 'Enter') addSymbol();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stockify Pro - Heatmap 🗺️</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Outfit:wght@400;500;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        .heatmap-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            padding: 1rem;
+            justify-content: center;
+        }
+
+        .heat-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            transition: all 0.2s;
+            cursor: pointer;
+            border-radius: 6px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .heat-box:hover {
+            z-index: 10;
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            border: 1px solid white;
+        }
+
+        .heat-box span {
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Stockify Heatmap 🗺️</h1>
+            <div class="subtitle">Global Market Overview</div>
+        </header>
+
+        <div class="nav-bar">
+            <a href="index.html" class="nav-link" data-i18n="nav_analyzer">📊 Analyzer</a>
+            <a href="screener.html" class="nav-link" data-i18n="nav_screener">🔍 Screener</a>
+            <a href="compare.html" class="nav-link" data-i18n="nav_compare">⚖️ Compare</a>
+            <a href="advanced.html" class="nav-link" data-i18n="nav_advanced">🧠 Advanced</a>
+            <a href="insider.html" class="nav-link" data-i18n="nav_insider">👔 Insider</a>
+            <a href="darkpool.html" class="nav-link" data-i18n="nav_darkpool">🌊 Dark Pool</a>
+            <a href="earnings.html" class="nav-link" data-i18n="nav_earnings">📅 Earnings</a>
+            <a href="calendar.html" class="nav-link" data-i18n="nav_calendar">📆 Calendar</a>
+            <a href="sectors.html" class="nav-link" data-i18n="nav_sectors">🔄 Sectors</a>
+            <a href="heatmap.html" class="nav-link active" data-i18n="nav_heatmap">🗺️ Heatmap</a>
+            <a href="volatility.html" class="nav-link" data-i18n="nav_volatility">⚡ Volatility</a>
+            <a href="portfolio.html" class="nav-link" data-i18n="nav_portfolio">💼 Portfolio</a>
+        </div>
+
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <h3>Market Performance (2 Days)</h3>
+                <div style="font-size:0.9rem; color:var(--text-secondary);">Size = Market Cap (Approx) | Color = %
+                    Change</div>
+            </div>
+
+            <div id="loading" style="text-align:center; padding:2rem;">
+                <div class="spinner"
+                    style="margin:0 auto; width:30px; height:30px; border:3px solid rgba(255,255,255,0.1); border-top-color:var(--accent-color); border-radius:50%; animation:spin 1s infinite linear;">
+                </div>
+                <div style="margin-top:1rem; color:var(--text-secondary);">Scanning Global Markets...</div>
+            </div>
+
+            <div id="heatmap-grid" class="heatmap-container" style="display:none;"></div>
+        </div>
+    </div>
+
+    <!-- Simple Spinner Animation -->
+    <style>
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+
+    <script>
+        async function loadHeatmap() {
+            try {
+                const res = await fetch('http://localhost:5000/heatmap');
+                const data = await res.json();
+
+                document.getElementById('loading').style.display = 'none';
+                const container = document.getElementById('heatmap-grid');
+                container.style.display = 'flex';
+
+                if (data.error) {
+                    container.innerHTML = `<div style="color:red;">Error: ${data.error}</div>`;
+                    return;
+                }
+
+                // Calculate total value to determine relative sizes if we wanted complex sizing
+                // For now, simpler bucket sizing
+
+                data.forEach(item => {
+                    const box = document.createElement('div');
+                    box.className = 'heat-box';
+
+                    // Color Logic
+                    const chg = item.change;
+                    let bg = '#333';
+                    const opacity = Math.min(1, 0.4 + (Math.abs(chg) / 4)); // Increased base opacity
+
+                    if (chg > 0) bg = `rgba(34, 197, 94, ${opacity})`; // Green
+                    if (chg < 0) bg = `rgba(239, 68, 68, ${opacity})`; // Red
+                    if (chg === 0) bg = '#4b5563'; // Gray
+
+                    box.style.backgroundColor = bg;
+
+                    // Size Logic
+                    // Base size 100px. Scale by value (Market Cap proxy)
+                    // Logarithmic scale for better visual distribution
+                    // turnover/1M -> if 10M -> 10. log(10)=1. 
+                    // Let's just use 3 Tiers for simplicity
+                    let w = 120, h = 90;
+                    if (item.value > 1000000000) { w = 180; h = 140; } // Mega
+                    else if (item.value > 100000000) { w = 150; h = 110; } // Large
+
+                    box.style.width = `${w}px`;
+                    box.style.height = `${h}px`;
+
+                    box.innerHTML = `
+                        <span style="font-weight:bold; font-size:${w > 130 ? '1.4rem' : '1rem'};">${item.symbol}</span>
+                        <span style="font-size:${w > 130 ? '1.1rem' : '0.8rem'}; margin-top:0.2rem;">${chg > 0 ? '+' : ''}${chg.toFixed(2)}%</span>
+                        <span style="font-size:0.7rem; opacity:0.8; position:absolute; bottom:0.4rem;">${item.sector}</span>
+                    `;
+
+                    // On Click > Go to Analyzer
+                    // Assuming index.html handles query param ?symbol=... or we use localStorage
+                    box.onclick = () => {
+                        // Store in localStorage for index.html to pick up?
+                        // Or just pass query param if implemented.
+                        // Since app.js checks url params or just input, let's try mostly standard way
+                        // But app.js logic reads 'currentSymbol' or whatever.
+                        // Let's simply copy to clipboard or redirect.
+                        window.location.href = `index.html?symbol=${item.symbol}`;
+                        // Note: index.html's app.js needs to handle URL param if not already. 
+                        // If not, we can save to 'last_symbol' in localStorage
+                        localStorage.setItem('stockify_last_symbol', item.symbol);
+                    };
+
+                    container.appendChild(box);
+                });
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('loading').innerHTML = "Failed to load heatmap.";
+            }
+        }
+
+        loadHeatmap();
+    </script>
+</body>
+
+</html>
